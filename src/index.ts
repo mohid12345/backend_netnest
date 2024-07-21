@@ -1,9 +1,14 @@
 import express,{ Express } from 'express';
-import session from 'express-session';
+import session, {
+  SessionOptions,
+  MemoryStore,
+  SessionData,
+} from "express-session"
 import dotenv from 'dotenv'
 import cors from 'cors'
 import connectDB from './config/db'
 import userRoutes from './routes/userRouter'
+import adminRoutes from './routes/adminRouter'
 import errorHandler from './middlewares/errorMiddleware'
 
 dotenv.config()
@@ -28,17 +33,26 @@ app.use(session({
   }
 }))
 
+
 app.use(cors({
   origin: "http://localhost:5173",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 }))
 
+// Set COOP and COEP headers
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');//additional setting for allow googleauth
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  next();
+});
+
 app.use(errorHandler)
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
 app.use("/api/", userRoutes)
+app.use("/api/admin", adminRoutes)
 
 const PORT = process.env.PORT || 3000
 connectDB()
