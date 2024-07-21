@@ -11,7 +11,9 @@ import Connections from "../models/connections/connectionModel";
 // Register new user
 
 export const userRegisterController = asyncHandler(
-  async (req:Request, res:Response) => {
+  async (req:Request, res:Response) => { 
+    // console.log("req body 00", req.body);
+    
     const {userName, email, password} = req.body
     
     const userEmail = await User.findOne({email})
@@ -27,7 +29,7 @@ export const userRegisterController = asyncHandler(
       secret: speakeasy.generateSecret({ length: 20 }).base32,
       digits: 4,
     })  
-    // console.log("req session details", req.session);
+    
     const sessionData = req.session!;
     sessionData.userDetails = {userName, email, password}
     sessionData.otp = otp;
@@ -37,7 +39,7 @@ export const userRegisterController = asyncHandler(
 
     sessionData.userDetails!.password = hashedPassword
     sendVerifyMail(req, userName, email)
-    console.log("register session", sessionData);
+    console.log("register session0", sessionData);
     res.status(200).json({ message: "OTP sent for verification ", email });
   }
 )
@@ -46,14 +48,21 @@ export const userRegisterController = asyncHandler(
 
 export const verifyOTPController = asyncHandler(
   async(req: Request, res: Response) => {
-    console.log("in verify");
+    // console.log("in verify");
     
     const { otp } = req.body;
-    console.log("otp verify session here itself ",req.session);
+    if(req.session) {
+      console.log("in session")
+    }
+    // console.log("otp verify session here itself ",req.session);
     console.log("enterd otp", otp);
     
     const sessionData = req.session!;
+    console.log("verify session data_2", req.session);
+    console.log("verify session data_3", sessionData);
+    
     const storedOTP = sessionData.otp;
+    console.log("storedOTP", storedOTP)
 
     if(!storedOTP || otp !== storedOTP) {
       res.status(400).json({message: "Invalid OTP"})
@@ -77,12 +86,16 @@ export const verifyOTPController = asyncHandler(
       email: userDetails.email,
       password: userDetails.password,
     })
+    console.log('zzzzdat1 :', user);
+    
     await Connections.create({
       userId: user._id
     })
     delete sessionData.userDetails;
     delete sessionData.otp;
     delete sessionData.otpGeneratedTime;
+    console.log("zzzdat2 : ", sessionData);
+    
     res.status(200).json({ message: "OTP verified, user created", user });
   }
 )
@@ -152,7 +165,7 @@ export const forgotPasswordController = asyncHandler(
 export const forgotOtpController = asyncHandler(
   async(req:Request, res:Response) => {
     const {otp} = req.body;
-    console.log("otp verification ", otp);
+    // console.log("otp verification ", otp);
     if(!otp) {
       res.status(400).json({message: "Please provide OTP"})
       return
