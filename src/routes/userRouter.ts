@@ -13,6 +13,7 @@ import {
     googleAuthController,
 } from '../controllers/userController'
 
+
 router.post("/login", userLoginController)
 router.post('/register', userRegisterController)
 router.post('/verifyOTP', verifyOTPController)

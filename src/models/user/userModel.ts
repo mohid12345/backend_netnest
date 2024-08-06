@@ -10,7 +10,7 @@ const userSchema: Schema = new Schema<user>({
   },
   name: {
     type: String,
-    default: 'zap_user',
+    default: 'nestizen',
   },
   email: {
     type: String,

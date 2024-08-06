@@ -58,7 +58,6 @@ export const verifyOTPController = asyncHandler(
     console.log("enterd otp", otp);
     
     const sessionData = req.session!;
-    console.log("verify session data_2", req.session);
     console.log("verify session data_3", sessionData);
     
     const storedOTP = sessionData.otp;
@@ -78,7 +77,7 @@ export const verifyOTPController = asyncHandler(
     }
     const userDetails = sessionData.userDetails;
     if(!userDetails) {
-      res.status(400).json({message: "User details not found in session"});
+      // res.status(400).json({message: "User details not found in session"});
       throw new Error("User details not found in session");
     }
     const user = await User.create({
