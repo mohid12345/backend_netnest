@@ -4,6 +4,7 @@ import Admin from "../models/admin/adminModel"
 import generateAdminToken from "../utils/generateAdminToken";
 import User from "../models/user/userModel";
 import Post from "../models/post/postModel";
+import Report from "../models/report/reportModel";
 
 
 export const LoginController = asyncHandler(
@@ -70,6 +71,8 @@ export const getPostsController = asyncHandler(
     }
   }
 )
+
+
  
   
   export const getDashboardDetails  = asyncHandler(
@@ -85,5 +88,47 @@ export const getPostsController = asyncHandler(
         totalPosts,
       }
       res.status(200).json(status)
+    }
+  )
+
+
+
+  export const postBlockController = asyncHandler(
+    async (req: Request, res: Response) => {
+      const {postId}  = req.body;
+      console.log("postid",postId);
+      const post = await Post.findById(postId);
+      
+      if (!post) {
+        res.status(400);
+        throw new Error("Post not found");
+      }
+      post.isBlocked = !post.isBlocked;    
+      await post.save();
+  
+      const posts = await Post.find({}).sort({ date: -1 }).lean();    
+      const blockedPost = post.isBlocked ? "Blocked" : "Unblocked";
+      
+      res.status(200).json({ posts, message: `${post.title} has been ${blockedPost}` });
+    }
+  );
+
+  export const getPostReports = asyncHandler(
+    async(req: Request, res: Response) => {
+      const reports = await Report.find({})
+      .populate({
+        path:'postId',
+        populate:({
+          path:'userId'
+        })
+      })
+      .sort({date: -1})
+      console.log(reports)
+      if(reports) {
+        console.log("reports", reports);
+        res.status(200).json({reports})
+      } else {
+        res.status(404).json({messsage: "No reports found"})
+      }
     }
   )
