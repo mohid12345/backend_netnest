@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import Admin from "../models/admin/adminModel"
 import generateAdminToken from "../utils/generateAdminToken";
 import User from "../models/user/userModel";
+import Post from "../models/post/postModel";
 
 
 export const LoginController = asyncHandler(
@@ -53,16 +54,35 @@ export const userBlockController = asyncHandler(
       res.status(200).json({users, message: `${user.userName} has been ${blockedUser}`})
     }
   )
+
+
+export const getPostsController = asyncHandler(  
+  async(req:Request, res:Response) => {
+    const posts = await Post.find({}).sort({date: -1})
+    .populate({
+      path: "userId",
+      select: "userName profileImg",
+    })
+    if(posts) {
+      res.status(200).json({posts})
+    } else {
+      res.status(400).json({message: "Post not found"})
+    }
+  }
+)
  
   
   export const getDashboardDetails  = asyncHandler(
     async(req:Request, res:Response) => {
   
       const totalUsers = await User.countDocuments();
+      const totalPosts = await Post.countDocuments();
+      console.log('postsss :',totalPosts);
  
   
       const status = {
         totalUsers,
+        totalPosts,
       }
       res.status(200).json(status)
     }

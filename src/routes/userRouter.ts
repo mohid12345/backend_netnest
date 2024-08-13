@@ -11,6 +11,8 @@ import {
     forgotOtpController,
     resetPasswordController,
     googleAuthController,
+    userSuggestionsController,
+    editProfileController,
 } from '../controllers/userController'
 
 
@@ -22,6 +24,8 @@ router.post('/forgot-password', forgotPasswordController)
 router.post('/forgot-otp', forgotOtpController)
 router.post('/reset-password', resetPasswordController)
 router.post('/google-auth', googleAuthController)
+router.post("/user-suggestions", userSuggestionsController)
+router.post("/edit-profile", editProfileController)
 
 
 export default router

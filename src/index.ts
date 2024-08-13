@@ -10,6 +10,7 @@ import connectDB from './config/db'
 import userRoutes from './routes/userRouter'
 import adminRoutes from './routes/adminRouter'
 import postRoutes from './routes/postRoutes'
+import connectionRoutes from './routes/connectionRoutes'
 import errorHandler from './middlewares/errorMiddleware'
 
 dotenv.config()
@@ -55,6 +56,7 @@ app.use(express.urlencoded({extended: true}))
 app.use("/api/", userRoutes)
 app.use("/api/admin", adminRoutes)
 app.use("/api/post", postRoutes)
+app.use("/api/connection",connectionRoutes)
 
 const PORT = process.env.PORT || 3000
 connectDB()

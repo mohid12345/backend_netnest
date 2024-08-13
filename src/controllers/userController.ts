@@ -329,3 +329,89 @@ export const googleAuthController = asyncHandler(
     }
   }
 )
+
+export const userSuggestionsController = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.body;
+      // console.log("userid",userId);
+      
+      const connection = await Connections.findOne({ userId });
+      // console.log("conn",connection);
+      
+
+      const userQuery = {
+        _id: { $ne: userId },
+        isDeleted: false,
+        isBlocked: false
+      };
+
+      let suggestedUsers = await User.find().limit(4)
+      // let suggestedUsers
+
+      // if (!connection || (connection?.followers.length === 0 && connection?.following.length === 0)) {
+      //   suggestedUsers = await User.find(userQuery)
+      //     .select('profileImg userName name createdAt')
+      //     .sort({ createdAt: -1 }) // Ensure sorting is applied here as well
+      //     .limit(4);
+      // } else {
+      //   const followingUsers = connection.following;
+      //   suggestedUsers = await User.find({
+      //     ...userQuery,
+      //     _id: { $nin: [...followingUsers, userId] }
+      //   })
+      //     .select('profileImg userName name createdAt')
+      //     .sort({ createdAt: -1 })
+      //     .limit(4);
+      // }
+
+      // console.log("suggestedUsers", suggestedUsers);
+      res.status(200).json({ suggestedUsers });
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  }
+);
+
+
+// Edit profile
+export const editProfileController = asyncHandler(
+  async(req: Request, res: Response) => {
+    try {
+      const { userId, image, userName, name, phone, bio, gender } = req.body;
+      // console.log("detailsssssssss", userId, image, userName, name, phone, bio, gender);
+      const user = await User.findOne({ _id: userId });
+      if (!user) {
+        res.status(400).json({ message: "User not found" });
+        return
+      }
+      // const userExist = await User.findOne({ userName:userName });
+      // if (userExist && (userExist._id.toString() !== userId)) {
+      //   res.status(400).json({ message: "Username taken" });
+      //   return
+      // }
+      if (userName) user.userName = userName;
+      if (name) user.name = name;
+      if (image) user.profileImg = image;
+      if (phone) user.phone = phone;
+      if (bio) user.bio = bio;
+      if (gender) user.gender = gender;
+     
+      await user.save();
+
+      res.status(200).json({ 
+        _id: user.id,
+        userName: user.userName,
+        name: user.name,
+        email: user.email,
+        profileImg: user.profileImg,
+        bio: user.bio,
+        phone: user.phone,
+        token: generateToken(user.id),
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
