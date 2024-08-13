@@ -10,7 +10,7 @@ const userSchema: Schema = new Schema<user>({
   },
   name: {
     type: String,
-    default: 'nestizen',
+    default: 'netizan',
   },
   email: {
     type: String,
@@ -45,7 +45,10 @@ const userSchema: Schema = new Schema<user>({
     type: Boolean,
     default: false
   },
-  
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
   isOnline: {
     type: Boolean,
     default: false
@@ -53,7 +56,7 @@ const userSchema: Schema = new Schema<user>({
   isGoogle: {
     type: Boolean,
     default: false
-  },
+  },  
   isPrivate: {
     type: Boolean,
     default: false,
