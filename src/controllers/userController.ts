@@ -346,24 +346,24 @@ export const userSuggestionsController = asyncHandler(
         isBlocked: false
       };
 
-      let suggestedUsers = await User.find().limit(4)
-      // let suggestedUsers
+      // let suggestedUsers = await User.find().limit(4)
+      let suggestedUsers
 
-      // if (!connection || (connection?.followers.length === 0 && connection?.following.length === 0)) {
-      //   suggestedUsers = await User.find(userQuery)
-      //     .select('profileImg userName name createdAt')
-      //     .sort({ createdAt: -1 }) // Ensure sorting is applied here as well
-      //     .limit(4);
-      // } else {
-      //   const followingUsers = connection.following;
-      //   suggestedUsers = await User.find({
-      //     ...userQuery,
-      //     _id: { $nin: [...followingUsers, userId] }
-      //   })
-      //     .select('profileImg userName name createdAt')
-      //     .sort({ createdAt: -1 })
-      //     .limit(4);
-      // }
+      if (!connection || (connection?.followers.length === 0 && connection?.following.length === 0)) {
+        suggestedUsers = await User.find(userQuery)
+          .select('profileImg userName name createdAt')
+          .sort({ createdAt: -1 }) // Ensure sorting is applied here as well
+          .limit(4);
+      } else {
+        const followingUsers = connection.following;
+        suggestedUsers = await User.find({
+          ...userQuery,
+          _id: { $nin: [...followingUsers, userId] }
+        })
+          .select('profileImg userName name createdAt')
+          .sort({ createdAt: -1 })
+          .limit(4);
+      }
 
       // console.log("suggestedUsers", suggestedUsers);
       res.status(200).json({ suggestedUsers });
@@ -412,6 +412,35 @@ export const editProfileController = asyncHandler(
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+export const getAllUsersController = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const users = await User.find({ isDeleted: false })
+      .select('userName name profileImg isVerified')
+      .sort({ createdAt: -1 });
+
+      const userIds = users.map(user => user._id);
+      const connections = await Connections.find({ userId: { $in: userIds } });
+
+      const result = users.map(user => {
+        // const userConnection = connections.find(conn => conn.userId.toString() === user._id.toString());
+        const userConnection = connections.find(conn => conn.userId.toString());//issue with inteface
+
+        return {
+          ...user.toObject(),
+          followersCount: userConnection ? userConnection.followers.length : 0,
+          followingCount: userConnection ? userConnection.following.length : 0,
+        };
+      });
+      console.log("result", result);
+      res.status(200).json({ users: result });
+    } catch (error) {
+      console.error('Error fetching users and connections:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
     }
   }
 );

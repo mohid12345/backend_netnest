@@ -703,7 +703,6 @@ export const getExplorePostController = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const { userId } = req.body;
-      // console.log("explore", userId);
       const posts = await Post.find({
         // userId: { $ne: userId },
         isBlocked: false,
@@ -726,6 +725,7 @@ export const getExplorePostController = asyncHandler(
       validPosts.forEach(post => {
         post.likes = post.likes.filter(like => like !== null);
       });
+      
 
       res.status(200).json(validPosts);
     } catch (err) {
