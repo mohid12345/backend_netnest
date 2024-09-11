@@ -13,7 +13,9 @@ import { createNotification } from "../helpers/notificationHelpers";
 export const addPostController = asyncHandler(
   async(req: Request, res: Response) => {
     const {userId, imgUrl, title, description, hideLikes, hideComment} = req.body
-    console.log("image url",imgUrl);
+    // console.log("image url",imgUrl);
+    // console.log('req.body from add post :', req.body);
+    
     const post = await Post.create({
       userId, imgUrl: imgUrl, title, description, hideLikes, hideComment
     })

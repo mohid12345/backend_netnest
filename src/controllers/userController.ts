@@ -444,3 +444,100 @@ export const getAllUsersController = asyncHandler(
     }
   }
 );
+
+export const getUserDetailsController = asyncHandler(
+  async(req:Request, res:Response) => {
+    const { userId } = req.params;
+    // console.log("useridddddd",userId);
+    const user = await User.findById(userId)
+    // console.log('user : ',user);
+    const connections = await Connections.findOne({userId})
+    // console.log('connections :', connections);
+    if(user) {
+      res.status(200).json({user, connections})
+    } else {
+      res.status(400).json({message: "Internal Server Error"})
+    }
+  }
+)
+
+export const userSearchController = asyncHandler(
+  async(req:Request, res:Response) => {
+    const {searchQuery} = req.body
+    if (!searchQuery || searchQuery.trim() === '') {
+       res.status(200).json({ suggestedUsers: [] }); 
+       return
+    }
+    let users;
+    try {
+      users = await User.find({
+        userName: { $regex: searchQuery, $options: "i" },
+        isBlocked: false,
+        isDeleted: false,
+      }).limit(6);
+      // console.log("search users", users);
+      res.status(200).json({ suggestedUsers: users });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Internal Server Error"});
+    }
+  }
+)
+
+export const changePasswordController = asyncHandler(
+  async(req:Request, res:Response) => {
+    const { userId, currentPassword, newPassword } = req.body
+    // console.log(userId, currentPassword, newPassword);
+    const user = await User.findById(userId)
+    if(!user) {
+      res.status(500).json({message: "User not found"})
+      return
+    }
+    if (user && typeof user.password === 'string' && (await bcrypt.compare(currentPassword, user.password))) {
+      console.log("inside user");
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(newPassword, salt)
+      user.password = hashedPassword  
+      await user.save()
+      res.status(200).json({ message: "Password has been reset successfully" });
+      return
+    } else {
+      res.status(500).json({message: "Password is wrong"})
+      return
+    }
+  }
+)
+
+
+// switch account to private
+export const switchAccountController = asyncHandler(
+  
+  async(req:Request, res:Response) => {
+    console.log('heluu');
+    
+    const {userId} = req.body
+    console.log("user id to switch", userId);
+    const user = await User.findById(userId)
+    if(!user) {
+      res.status(400).json({message: "User not found"})
+      return
+    }
+    user.isPrivate = !user.isPrivate
+    await user.save()
+    const userDetails = {
+      _id: user.id,
+        userName: user.userName,
+        name: user.name,
+        bio: user.bio,
+        email: user.email,
+        phone: user.phone,
+        gender: user.gender,
+        isPrivate: user.isPrivate,
+        profileImg: user.profileImg,
+        savedPost: user.savedPost,
+        token: generateToken(user.id)
+    }
+    const accountStatus = user.isPrivate ? "Private" : "Public"
+    res.status(200).json({userDetails, message: `Account has been changed to ${accountStatus}`})
+  }
+)

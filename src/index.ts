@@ -5,13 +5,18 @@ import session, {
   SessionData,
 } from "express-session"
 import dotenv from 'dotenv'
+import http from "http";
 import cors from 'cors'
 import connectDB from './config/db'
 import userRoutes from './routes/userRouter'
 import adminRoutes from './routes/adminRouter'
 import postRoutes from './routes/postRoutes'
+import chatRoutes from './routes/chatRoutes'
 import connectionRoutes from './routes/connectionRoutes'
 import errorHandler from './middlewares/errorMiddleware'
+import { Server, Socket } from 'socket.io';
+import socketIo_Config from './utils/socket/socket';
+
 
 dotenv.config()
 
@@ -43,11 +48,11 @@ app.use(cors({
 }))
 
 // Set COOP and COEP headers
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');//additional setting for allow googleauth
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-  next();
-});
+// app.use((req, res, next) => {
+//   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');//additional setting for allow googleauth
+//   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+//   next();
+// });
 
 app.use(errorHandler)
 app.use(express.json())
