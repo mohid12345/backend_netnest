@@ -47,6 +47,7 @@ app.use(cors({
   credentials: true,
 }))
 
+
 // Set COOP and COEP headers
 // app.use((req, res, next) => {
 //   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');//additional setting for allow googleauth
@@ -58,13 +59,27 @@ app.use(errorHandler)
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
-app.use("/api/", userRoutes)
-app.use("/api/admin", adminRoutes)
-app.use("/api/post", postRoutes)
-app.use("/api/connection",connectionRoutes)
+// app.use("/api/", userRoutes)
+// app.use("/api/admin", adminRoutes)
+// app.use("/api/post", postRoutes)
+// app.use("/api/connection",connectionRoutes)
 
 const PORT = process.env.PORT || 3000
 connectDB()
+
+const server = http.createServer(app)
+const io: Server = new Server(server, {
+  cors: { origin: "*" },
+})
+
+socketIo_Config(io)
+
+app.use("/api/", userRoutes)
+app.use("/api/admin", adminRoutes)
+app.use("/api/post", postRoutes)
+app.use("/api/connection", connectionRoutes)
+app.use("/api/chat", chatRoutes)
+app.use(errorHandler)
 
 app.listen(PORT, () =>{
   console.log(`server starts running at \x1b[36mhttp://localhost:${PORT}\x1b[0m`)
