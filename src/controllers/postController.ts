@@ -356,7 +356,9 @@ export const updatePostController = asyncHandler(
 
 export const reportPostController = asyncHandler(
   async(req: Request, res: Response) => {
-    const {userId, postId, reason} = req.body
+    const {userId, postId, reason, reasonType} = req.body
+    console.log("report from backend :", req.body);
+    
     // console.log(userId, postId, reason);
     const existingReport = await Report.findOne({userId, postId})
     if(existingReport) {
@@ -366,7 +368,8 @@ export const reportPostController = asyncHandler(
     const report = new Report({
       userId,
       postId,
-      reason
+      reason,
+      reasonType
     })
     await report.save()
 
