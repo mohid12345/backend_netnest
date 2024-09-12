@@ -4,6 +4,7 @@ interface ReportInterface extends Document {
   userId:  Types.ObjectId;
   postId: Types.ObjectId;
   reason: string;
+  reasonType: string;
 }
 
 export default ReportInterface

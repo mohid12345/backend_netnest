@@ -16,6 +16,10 @@ const ReportSchema =  new Schema<ReportInterface>({
     type: String,
     required: true
   },
+  reasonType: {
+    type: String,
+    required: true
+  },
 },{timestamps: true})
 
 const Report = model<ReportInterface>('Report', ReportSchema);
