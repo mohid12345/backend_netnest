@@ -137,7 +137,7 @@ export const getPostController = asyncHandler(
       // Fetch the user's connections
       const connections = await Connections.findOne({ userId }, { following: 1 });
       const followingUsers = connections?.following || [];
-      console.log("followingUsers",followingUsers);
+      // console.log("followingUsers",followingUsers);
       
       
       // Fetch valid users who are not blocked or deleted
@@ -150,7 +150,7 @@ export const getPostController = asyncHandler(
       
 
       const validUserIds = validUsers.map(user => user._id);
-      console.log('backend valid user id :', validUserIds);
+      // console.log('backend valid user id :', validUserIds);
       
 
       
@@ -169,7 +169,7 @@ export const getPostController = asyncHandler(
           select: "userName name profileImg isVerified",
           match: { isBlocked: false }
         })
-        .populate({
+        .populate({ 
           path: "likes",
           select: "userName name profileImg isVerified",
           match: { isBlocked: false }
@@ -292,10 +292,10 @@ export const getSavedPostController = asyncHandler(
   }
 );
 
-export const deletePostController = asyncHandler(
+export const deletePostController = asyncHandler(  
   async(req: Request, res: Response) => {
     const {postId, userId} = req.body
-    console.log(postId);
+    console.log('delete data:',postId);
     const post = await Post.findById(postId)
     // console.log(post);
     if (!post) {

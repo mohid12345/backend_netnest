@@ -37,6 +37,10 @@ const userSchema: Schema = new Schema<user>({
     type: String,
     enum: Object.values(Gender)
   },
+  // gender: {
+  //   type: String,
+  //   enum: Object.values(Gender) as Gender[]
+  // },
   savedPost: {
     type: [{type: Schema.Types.ObjectId, ref: 'Post'}],
     default: [],    
