@@ -1,48 +1,158 @@
-import { Request, Response, json } from "express";
-import asyncHandler from "express-async-handler";
+// import { Request, Response } from 'express';
+// import { StatusCodes } from "http-status-codes";
+// import asyncHandler from "express-async-handler";
 import speakeasy from 'speakeasy'
 import bcrypt from 'bcrypt'
 import User from "../models/user/userModel";
-import sendVerifyMail from "../utils/sendVerifyEmail";
+// import sendVerifyMail from "../utils/sendVerifyEmail";
 import generateToken from "../utils/generateToken";
 import Connections from "../models/connections/connectionModel";
+// import { findUserByEmail, findUserByUsername, createUser, createConnection } from '../respository/UserRepository';
+// import { UserService } from '../services/userServices';
 
+
+// method 3 with class base  repository 
+
+
+import { Request, Response } from 'express';
+import { StatusCodes } from "http-status-codes";
+import asyncHandler from "express-async-handler";
+import { UserService } from '../services/userServices';
+import { UserRepository } from '../respository/UserRepository';
+import sendVerifyMail from "../utils/sendVerifyEmail";
+
+export const userRegisterController = asyncHandler(async (req: Request, res: Response) => {
+  const userRepository = new UserRepository();
+  const userService = new UserService(userRepository);
+
+  try {
+    const { otp, sessionData } = await userService.registerUser(req.body);
+    
+    // Update session
+    req.session!.userDetails = sessionData.userDetails;
+    req.session!.otp = sessionData.otp;
+    req.session!.otpGeneratedTime = sessionData.otpGeneratedTime;
+
+    await sendVerifyMail(req, req.body.userName, req.body.email);
+    
+    console.log("Register session data:", req.session);
+    res.status(StatusCodes.OK).json({ message: "OTP sent for verification", email: req.body.email });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(StatusCodes.CONFLICT).json({ message: error.message });
+    } else {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "An unexpected error occurred" });
+    }
+  }
+});
+
+// method 2 working
+
+// export const userRegisterController = asyncHandler(async (req: Request, res: Response) => {
+//   const userService = new UserService();
+  
+//   try {
+//     const otp = await userService.registerUser(req.body, req.session!);
+//     sendVerifyMail(req, req.body.userName, req.body.email);
+//     console.log("Register session data:", req.session);
+//     res.status(StatusCodes.OK).json({ message: "OTP sent for verification", email: req.body.email });
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       res.status(StatusCodes.CONFLICT).json({ message: error.message });
+//     } else {
+//       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "An unexpected error occurred" });
+//     }
+//   }
+// });
+
+// export const userRegisterController = asyncHandler(async (req: Request, res: Response) => {
+//   const userService = new UserService();
+
+//   try {
+//     const otp = await userService.registerUser(req.body, req.session!);
+//     sendVerifyMail(req, req.body.userName, req.body.email);
+    
+//     console.log("Register session data:", req.session);
+//     res.status(StatusCodes.OK).json({ message: "OTP sent for verification", email: req.body.email });
+//   } catch (error) {
+//     res.status(StatusCodes.CONFLICT).json({ message: error.message });
+//   }
+// });
+
+//Register new user method 1
+
+// export const userRegisterController = asyncHandler(
+//   async (req: Request, res: Response) => {
+//     const { userName, email, password } = req.body;
+
+//     const userEmail = await findUserByEmail(email);
+//     if (userEmail) {
+//       res.status(StatusCodes.CONFLICT).json({ message: "Email already exists" });
+//       return;
+//     }
+//     const userId = await findUserByUsername(userName);
+//     if (userId) {
+//       res.status(StatusCodes.CONFLICT).json({ message: "Username already exists" });
+//       return;
+//     }
+
+//     const otp = speakeasy.totp({
+//       secret: speakeasy.generateSecret({ length: 20 }).base32,
+//       digits: 4,
+//     });
+
+//     const sessionData = req.session!;
+//     sessionData.userDetails = { userName, email, password };
+//     sessionData.otp = otp;
+//     sessionData.otpGeneratedTime = Date.now();
+
+//     // Hash password
+//     const salt = await bcrypt.genSalt(10);
+//     const hashedPassword = await bcrypt.hash(password, salt);
+
+//     // Update session with hashed password
+//     sessionData.userDetails.password = hashedPassword;
+
+//     sendVerifyMail(req, userName, email);
+
+//     console.log("Register session data:", sessionData);
+//     res.status(StatusCodes.OK).json({ message: "OTP sent for verification", email });
+//   }
+// );
 
 // Register new user
 
-export const userRegisterController = asyncHandler(
-  async (req:Request, res:Response) => { 
-    // console.log("req body 00", req.body);
+// export const userRegisterController = asyncHandler(
+//   async (req:Request, res:Response) => { 
+//     // console.log("req body 00", req.body);
     
-    const {userName, email, password} = req.body
+//     const {userName, email, password} = req.body
     
-    const userEmail = await User.findOne({email})
-    if(userEmail) {
-      res.status(500).json({message: "Email already exist"})
-    }
-    const userId = await User.findOne({userName})
-    if(userId) {
-      res.status(500).json({message: "UserName already exist"})
-    }
+//     const userEmail = await User.findOne({email})
+//     if(userEmail) {
+//       res.status(StatusCodes.CONFLICT).json({message: "Email already exist"})
+//     }
+//     const userId = await User.findOne({userName})
+//     if(userId) {
+//       res.status(StatusCodes.CONFLICT).json({message: "UserName already exist"})
+//     }
+//     const otp = speakeasy.totp({
+//       secret: speakeasy.generateSecret({ length: 20 }).base32,
+//       digits: 4,
+//     }) 
+//     const sessionData = req.session!;
+//     sessionData.userDetails = {userName, email, password}
+//     sessionData.otp = otp;
+//     sessionData.otpGeneratedTime = Date.now()
+//     const salt = await bcrypt.genSalt(10)
+//     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const otp = speakeasy.totp({
-      secret: speakeasy.generateSecret({ length: 20 }).base32,
-      digits: 4,
-    })  
-    
-    const sessionData = req.session!;
-    sessionData.userDetails = {userName, email, password}
-    sessionData.otp = otp;
-    sessionData.otpGeneratedTime = Date.now()
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
-
-    sessionData.userDetails!.password = hashedPassword
-    sendVerifyMail(req, userName, email)
-    console.log("register session0", sessionData);
-    res.status(200).json({ message: "OTP sent for verification ", email });
-  }
-)
+//     sessionData.userDetails!.password = hashedPassword
+//     sendVerifyMail(req, userName, email)
+//     console.log("register session0", sessionData);
+//     res.status(StatusCodes.OK).json({ message: "OTP sent for verification ", email });
+//   }
+// )
 
 // register otp verification 
 
@@ -64,7 +174,7 @@ export const verifyOTPController = asyncHandler(
     console.log("storedOTP", storedOTP)
 
     if(!storedOTP || otp !== storedOTP) {
-      res.status(400).json({message: "Invalid OTP"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "Invalid OTP"})
       return
       // throw new Error("Invalid OTP")
     }
@@ -72,12 +182,12 @@ export const verifyOTPController = asyncHandler(
     const currentTime = Date.now()
     const otpExpirationTime = 60 * 1000;
     if(currentTime - otpGeneratedTime > otpExpirationTime) {
-      res.status(400).json({message: "User details not found in session"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "User details not found in session"})
       // throw new Error("User details not found in session")
     }
     const userDetails = sessionData.userDetails;
     if(!userDetails) {
-      // res.status(400).json({message: "User details not found in session"});
+      // res.status(StatusCodes.BAD_REQUEST).json({message: "User details not found in session"});
       throw new Error("User details not found in session");
     }
     const user = await User.create({
@@ -95,7 +205,7 @@ export const verifyOTPController = asyncHandler(
     delete sessionData.otpGeneratedTime;
     console.log("zzzdat2 : ", sessionData);
     
-    res.status(200).json({ message: "OTP verified, user created", user });
+    res.status(StatusCodes.OK).json({ message: "OTP verified, user created", user });
   }
 )
 
@@ -117,13 +227,13 @@ export const resendOTPController = asyncHandler(
     const userDetails = sessionData.userDetails;
     console.log("sessiondata resendotp", sessionData);
     if(!userDetails) {
-      res.status(400).json({message: "User details not found in session"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "User details not found in session"})
       // throw new Error("User details not found in session")
       return  
     }
     console.log(sessionData);
     sendVerifyMail(req, userDetails.userName, userDetails.email);
-    res.status(200).json({ message: "OTP sent for verification", email })
+    res.status(StatusCodes.OK).json({ message: "OTP sent for verification", email })
   }
 )
 
@@ -135,7 +245,7 @@ export const forgotPasswordController = asyncHandler(
     const user = await User.findOne({email})
 
     if(user?.isGoogle) {
-      res.status(400).json({message: "SignIn with google or Create account"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "SignIn with google or Create account"})
       return
     }
     
@@ -151,9 +261,9 @@ export const forgotPasswordController = asyncHandler(
       sessionData.email = email;
       console.log("sessiondata in forgotPasswordController", sessionData);
       sendVerifyMail(req, user.userName, user.email);
-      res.status(200).json({message: `OTP has been send to your email`, email})
+      res.status(StatusCodes.OK).json({message: `OTP has been send to your email`, email})
     } else {
-      res.status(400).json({message: "User not found"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "User not found"})
       // throw new Error("Not User Found");
     }
   }
@@ -166,7 +276,7 @@ export const forgotOtpController = asyncHandler(
     const {otp} = req.body;
     // console.log("otp verification ", otp);
     if(!otp) {
-      res.status(400).json({message: "Please provide OTP"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "Please provide OTP"})
       return
       // throw new Error("Please provide OTP");
     }
@@ -174,7 +284,7 @@ export const forgotOtpController = asyncHandler(
     const storedOTP = sessionData.otp
     console.log("stored otp",storedOTP);
     if(!storedOTP || otp !== storedOTP) {
-      res.status(400).json({message: "Invalid OTP"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "Invalid OTP"})
       return
       // throw new Error("Invalid OTP")
     }
@@ -182,7 +292,7 @@ export const forgotOtpController = asyncHandler(
     const currentTime = Date.now();
     const otpExpirationTime = 60 * 1000;
     if (currentTime - otpGeneratedTime > otpExpirationTime) { 
-      res.status(400).json({message: "OTP has expired"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "OTP has expired"})
       return
       // throw new Error("OTP has expired");
     }
@@ -190,7 +300,7 @@ export const forgotOtpController = asyncHandler(
     delete sessionData.otp
     delete sessionData.otpGeneratedTime
     // console.log("sessiondata in forgotOtpController", sessionData);
-    res.status(200).json({message: "OTP has been verified. Please reset password",
+    res.status(StatusCodes.OK).json({message: "OTP has been verified. Please reset password",
     email: sessionData?.email,
     })
   }
@@ -204,18 +314,18 @@ export const resetPasswordController = asyncHandler(
     const sessionData = req.session
     console.log("sessiondata in resetPasswordController", sessionData);
     if(!sessionData || !sessionData.email) {
-      res.status(400).json({message: "No session data found in session"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "No session data found in session"})
       return
     }
 
     if(password !== confirmPassword) {
-      res.status(400).json({message: "Password do not match"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "Password do not match"})
       return
     }
 
     const user = await User.findOne({email: sessionData.email})
     if(!user) {
-      res.status(400).json({message: "User not found"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "User not found"})
       return
     }
 
@@ -223,11 +333,24 @@ export const resetPasswordController = asyncHandler(
     const hashedPassword = await bcrypt.hash(password, salt);
     user?user.password = hashedPassword : null
     await user?.save()
-    res.status(200).json({ message: "Password has been reset successfully" });
+    res.status(StatusCodes.OK).json({ message: "Password has been reset successfully" });
   }
 )
 
 // Login user
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const userLoginController = asyncHandler(
   async (req:Request, res:Response) => {
@@ -236,12 +359,12 @@ export const userLoginController = asyncHandler(
 
     const user = await User.findOne({email})
     if(user?.isBlocked) {
-      res.status(400).json({message: "user is blocked"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "user is blocked"})
       return
     }
     
     if (user && typeof user.password === 'string' && (await bcrypt.compare(password, user.password))) {
-      res.status(200).json({
+      res.status(StatusCodes.OK).json({
         message: "Login succussfull",
         _id: user.id,
         userName: user.userName,
@@ -255,11 +378,22 @@ export const userLoginController = asyncHandler(
         token: generateToken(user.id)
       })
     } else {
-      res.status(400).json({message: "invalid credentails"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "invalid credentails"})
       // throw new Error("Invalid credentails");
     }
   }
 )
+
+
+
+
+
+
+
+
+
+
+
 
 // Google authentication
 
@@ -273,7 +407,7 @@ export const googleAuthController = asyncHandler(
 
       if(userExist) {
         if(userExist.isBlocked) {
-          res.status(400).json({message: "User is blocked"})
+          res.status(StatusCodes.BAD_REQUEST).json({message: "User is blocked"})
           return
         }
         if(userExist.isGoogle) {
@@ -290,7 +424,7 @@ export const googleAuthController = asyncHandler(
           })
           return
         } else {
-          res.status(400).json({message: "User already Exist with this email"})
+          res.status(StatusCodes.BAD_REQUEST).json({message: "User already Exist with this email"})
         }
       }
 
@@ -312,7 +446,7 @@ export const googleAuthController = asyncHandler(
 
       const token = generateToken(newUserId)
 
-      res.status(200).json({
+      res.status(StatusCodes.OK).json({
         message: "Login succussfull",
         _id: newUser.id,
         userName: newUser.userName,
@@ -325,7 +459,7 @@ export const googleAuthController = asyncHandler(
       })
     } catch (error) {
       console.error("Error in Google authentication:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
     }
   }
 )
@@ -366,9 +500,9 @@ export const userSuggestionsController = asyncHandler(
       }
 
       // console.log("suggestedUsers", suggestedUsers);
-      res.status(200).json({ suggestedUsers });
+      res.status(StatusCodes.OK).json({ suggestedUsers });
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
@@ -382,12 +516,12 @@ export const editProfileController = asyncHandler(
       // console.log("detailsssssssss", userId, image, userName, name, phone, bio, gender);
       const user = await User.findOne({ _id: userId });
       if (!user) {
-        res.status(400).json({ message: "User not found" });
+        res.status(StatusCodes.BAD_REQUEST).json({ message: "User not found" });
         return
       }
       // const userExist = await User.findOne({ userName:userName });
       // if (userExist && (userExist._id.toString() !== userId)) {
-      //   res.status(400).json({ message: "Username taken" });
+      //   res.status(StatusCodes.BAD_REQUEST).json({ message: "Username taken" });
       //   return
       // }
       if (userName) user.userName = userName;
@@ -399,7 +533,7 @@ export const editProfileController = asyncHandler(
      
       await user.save();
 
-      res.status(200).json({ 
+      res.status(StatusCodes.OK).json({ 
         _id: user.id,
         userName: user.userName,
         name: user.name,
@@ -411,7 +545,7 @@ export const editProfileController = asyncHandler(
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
     }
   }
 );
@@ -437,10 +571,10 @@ export const getAllUsersController = asyncHandler(
         };
       });
       console.log("result", result);
-      res.status(200).json({ users: result });
+      res.status(StatusCodes.OK).json({ users: result });
     } catch (error) {
       console.error('Error fetching users and connections:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Internal Server Error' });
     }
   }
 );
@@ -454,18 +588,18 @@ export const getUserDetailsController = asyncHandler(
     const connections = await Connections.findOne({userId})
     // console.log('connections :', connections);
     if(user) {
-      res.status(200).json({user, connections})
+      res.status(StatusCodes.OK).json({user, connections})
     } else {
-      res.status(400).json({message: "Internal Server Error"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "Internal Server Error"})
     }
   }
 )
 
 export const userSearchController = asyncHandler(
   async(req:Request, res:Response) => {
-    const {searchQuery} = req.body
+    const {searchQuery} = req.body //req been destructuring
     if (!searchQuery || searchQuery.trim() === '') {
-       res.status(200).json({ suggestedUsers: [] }); 
+       res.status(StatusCodes.OK).json({ suggestedUsers: [] }); 
        return
     }
     let users;
@@ -476,10 +610,10 @@ export const userSearchController = asyncHandler(
         isDeleted: false,
       }).limit(6);
       // console.log("search users", users);
-      res.status(200).json({ suggestedUsers: users });
+      res.status(StatusCodes.OK).json({ suggestedUsers: users });
     } catch (error) {
       console.error("Error fetching users:", error);
-      res.status(500).json({ message: "Internal Server Error"});
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal Server Error"});
     }
   }
 )
@@ -490,7 +624,7 @@ export const changePasswordController = asyncHandler(
     // console.log(userId, currentPassword, newPassword);
     const user = await User.findById(userId)
     if(!user) {
-      res.status(500).json({message: "User not found"})
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({message: "User not found"})
       return
     }
     if (user && typeof user.password === 'string' && (await bcrypt.compare(currentPassword, user.password))) {
@@ -499,10 +633,10 @@ export const changePasswordController = asyncHandler(
       const hashedPassword = await bcrypt.hash(newPassword, salt)
       user.password = hashedPassword  
       await user.save()
-      res.status(200).json({ message: "Password has been reset successfully" });
+      res.status(StatusCodes.OK).json({ message: "Password has been reset successfully" });
       return
     } else {
-      res.status(500).json({message: "Password is wrong"})
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({message: "Password is wrong"})
       return
     }
   }
@@ -519,7 +653,7 @@ export const switchAccountController = asyncHandler(
     console.log("user id to switch", userId);
     const user = await User.findById(userId)
     if(!user) {
-      res.status(400).json({message: "User not found"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "User not found"})
       return
     }
     user.isPrivate = !user.isPrivate
@@ -538,6 +672,6 @@ export const switchAccountController = asyncHandler(
         token: generateToken(user.id)
     }
     const accountStatus = user.isPrivate ? "Private" : "Public"
-    res.status(200).json({userDetails, message: `Account has been changed to ${accountStatus}`})
+    res.status(StatusCodes.OK).json({userDetails, message: `Account has been changed to ${accountStatus}`})
   }
 )
