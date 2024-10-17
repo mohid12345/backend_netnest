@@ -16,13 +16,17 @@ import {
     getUserDetailsController ,
     userSearchController,
     changePasswordController,
-    switchAccountController
+    switchAccountController,
+    refreshTheToken,
+    userLogoutController
     
 } from '../controllers/userController'
 
 import {getNotifications} from '../controllers/notificationController'
 
 router.post("/login", userLoginController)
+router.post("/logout", userLogoutController)
+router.post("/token", refreshTheToken)
 router.post('/register', userRegisterController)
 router.post('/verifyOTP', verifyOTPController)
 router.post('/resendOTP', resendOTPController)
@@ -41,5 +45,6 @@ router.post("/get-notifications", getNotifications)
 router.patch("/switch-to-private", switchAccountController)
 router.post("/get-users", getAllUsersController)
 router.get("/user-details/:userId", getUserDetailsController)
+
 
 export default router

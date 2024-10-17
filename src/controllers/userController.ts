@@ -6,7 +6,9 @@ import bcrypt from 'bcrypt'
 import User from "../models/user/userModel";
 // import sendVerifyMail from "../utils/sendVerifyEmail";
 import generateToken from "../utils/generateToken";
+import generateRefreshToken from '../utils/generateRefreshToken';
 import Connections from "../models/connections/connectionModel";
+import RefreshToken from "../models/token/tokenModel" 
 // import { findUserByEmail, findUserByUsername, createUser, createConnection } from '../respository/UserRepository';
 // import { UserService } from '../services/userServices';
 
@@ -20,6 +22,7 @@ import asyncHandler from "express-async-handler";
 import { UserService } from '../services/userServices';
 import { UserRepository } from '../respository/UserRepository';
 import sendVerifyMail from "../utils/sendVerifyEmail";
+import jwt from 'jsonwebtoken';
 
 export const userRegisterController = asyncHandler(async (req: Request, res: Response) => {
   const userRepository = new UserRepository();
@@ -337,20 +340,8 @@ export const resetPasswordController = asyncHandler(
   }
 )
 
+
 // Login user
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export const userLoginController = asyncHandler(
   async (req:Request, res:Response) => {
@@ -362,8 +353,19 @@ export const userLoginController = asyncHandler(
       res.status(StatusCodes.BAD_REQUEST).json({message: "user is blocked"})
       return
     }
+
+    const refreshToken = generateRefreshToken(user?.id)
     
     if (user && typeof user.password === 'string' && (await bcrypt.compare(password, user.password))) {
+
+      await new RefreshToken({token: refreshToken, userId: user.id}).save() //save locally @db
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true, //cant be accesssed by js
+        secure: process.env.NODE_ENV === "development", //secure in production (HTTPS)
+        sameSite: 'strict',
+      })
+
       res.status(StatusCodes.OK).json({
         message: "Login succussfull",
         _id: user.id,
@@ -384,6 +386,82 @@ export const userLoginController = asyncHandler(
   }
 )
 
+
+
+
+
+
+
+
+export const refreshTheToken = asyncHandler(async (req: Request, res: Response) => {
+  console.log('Cookies received:', req.cookies);
+  console.log('Headers received:', req.headers);
+
+  const refreshToken = req.cookies?.refreshToken;
+  console.log('Refresh token from cookie:', refreshToken);
+
+  if (!refreshToken) {
+    console.log('No refresh token found in cookie');
+    // Try to get token from Authorization header as fallback
+    const authHeader = req.headers['authorization'];
+    const headerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    console.log('Refresh token from header:', headerToken);
+
+    if (!headerToken) {
+      res.status(StatusCodes.FORBIDDEN).json({ message: "Access denied, no refresh token" });
+      return;
+    }
+  }
+
+  const tokenToUse = refreshToken || (req.headers['authorization'] as string)?.split(' ')[1];
+
+  if (!tokenToUse) {
+    res.status(StatusCodes.FORBIDDEN).json({ message: "Access denied, no refresh token" });
+    return;
+  }
+
+  const storedToken = await RefreshToken.findOne({ token: tokenToUse });
+  if (!storedToken) {
+    res.status(StatusCodes.FORBIDDEN).json({ message: "Invalid refresh token" });
+    return;
+  }
+
+  try {
+    const secretKey = process.env.JWT_REFRESH_SECRET_KEY;
+    if (!secretKey) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal server error: missing JWT refresh secret key." });
+      return;
+    }
+
+    const decoded = jwt.verify(tokenToUse, secretKey) as { id: string };
+    const accessToken = generateToken(decoded.id);
+    res.status(StatusCodes.OK).json({ accessToken });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(StatusCodes.FORBIDDEN).json({ message: 'Invalid or expired refresh token' });
+  }
+});
+
+
+
+
+
+
+//Logout with removing refresh token from db
+export const userLogoutController = asyncHandler(async(req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken
+  if (!refreshToken) {
+     res.status(StatusCodes.BAD_REQUEST).json({ message: 'No refresh token provided' });
+  }
+
+  // Delete the refresh token from the database
+  await RefreshToken.findOneAndDelete({ token: refreshToken });
+
+  // Clear the cookie
+  res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+  res.status(StatusCodes.OK).json({ message: 'Logged out successfully' });
+});
 
 
 
