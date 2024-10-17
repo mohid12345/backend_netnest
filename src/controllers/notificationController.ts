@@ -3,6 +3,12 @@ import asyncHandler from "express-async-handler";
 import Notification from '../models/notifications/notificationModel';
 import Connections from '../models/connections/connectionModel';
 
+
+// export const getNotifications = asyncHandler(
+
+// )
+
+
 export const getNotifications = asyncHandler(
   async(req: Request, res: Response):Promise<void> => {
     try {
@@ -22,4 +28,5 @@ export const getNotifications = asyncHandler(
     }
   }
 )
+
 
