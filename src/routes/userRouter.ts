@@ -17,8 +17,11 @@ import {
     userSearchController,
     changePasswordController,
     switchAccountController,
+    verifyOTPForEmailController,
+    verifyEmailForEmailController,
     refreshTheToken,
-    userLogoutController
+    userLogoutController,
+    deleteAccountController
     
 } from '../controllers/userController'
 
@@ -39,12 +42,12 @@ router.post("/user-search", userSearchController)
 router.post("/edit-profile", editProfileController)
 router.post("/change-password", changePasswordController)
 router.post("/get-notifications", getNotifications)
-// router.post("/verifyEmail-forEmail", verifyEmailForEmailController)
-// router.post("/verifyOTP-forEmail", verifyOTPForEmailController)
-// router.post("/delete-account", deleteAccountController)
+router.post("/verifyEmail-forEmail", verifyEmailForEmailController)
+router.post("/verifyOTP-forEmail", verifyOTPForEmailController)
 router.patch("/switch-to-private", switchAccountController)
 router.post("/get-users", getAllUsersController)
 router.get("/user-details/:userId", getUserDetailsController)
+router.post("/delete-account", deleteAccountController)
 
 
 export default router

@@ -1,3 +1,4 @@
+// src/index.ts
 import express, { Express } from "express";
 import session from "express-session";
 import dotenv from "dotenv";
@@ -11,7 +12,8 @@ import chatRoutes from "./routes/chatRoutes";
 import connectionRoutes from "./routes/connectionRoutes";
 import errorHandler from "./middlewares/errorMiddleware";
 import { Server } from "socket.io";
-import socketIo_Config from "./utils/socket/socket";
+import socketIo_Config from "./utils/socket/socket"; // Existing socket configuration
+import notificationSocket from "./utils/socket/notificationSocket"; // New notification socket
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -66,8 +68,11 @@ io.use((socket, next) => {
   sessionMiddleware(socket.request as any, {} as any, next as any);
 });
 
-// Use a single socket configuration
+// Use a single socket configuration for general socket logic
 socketIo_Config(io);
+
+// Set up the notification socket configuration
+notificationSocket(io);
 
 app.use("/api/", userRoutes);
 app.use("/api/admin", adminRoutes);
@@ -98,6 +103,9 @@ io.on("connect_error", (err) => {
 
 
 
+
+
+
 // import express, { Express } from "express";
 // import session from "express-session";
 // import dotenv from "dotenv";
@@ -112,12 +120,13 @@ io.on("connect_error", (err) => {
 // import errorHandler from "./middlewares/errorMiddleware";
 // import { Server } from "socket.io";
 // import socketIo_Config from "./utils/socket/socket";
-// import nofi_socketIo_Config from "./utils/socket/nofi_socket";
+// import notificationSocket from "./utils/socket/notificationSocket";
 // import cookieParser from "cookie-parser";
 
 // dotenv.config();
 
 // const app: Express = express();
+
 // declare module "express-session" {
 //   interface Session {
 //     userDetails?: { userName: string; email: string; password: string };
@@ -129,48 +138,44 @@ io.on("connect_error", (err) => {
 // }
 
 // const sessionSecret = process.env.SESSION_SECRET || "default_secret_key";
-// app.use(
-//   session({
-//     secret: sessionSecret,
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: {
-//       maxAge: 24 * 60 * 60 * 1000,
-//     },
-//   })
-// );
+// const sessionMiddleware = session({
+//   secret: sessionSecret,
+//   resave: false,
+//   saveUninitialized: true,
+//   cookie: {
+//     maxAge: 24 * 60 * 60 * 1000,
+//   },
+// });
 
-// app.use(
-//   cors({
-//     origin: process.env.CORS_PORT,
-//     // origin: "*",
-//     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-//     credentials: true,
-//   })
-// );
+// app.use(sessionMiddleware);
 
-// // Set COOP and COEP headers
-// // app.use((req, res, next) => {
-// //   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');//additional setting for allow googleauth
-// //   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-// //   next();
-// // });
+// const corsOptions = {
+//   origin: process.env.CORS_PORT,
+//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//   credentials: true,
+// };
+
+// app.use(cors(corsOptions));
 
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 // app.use(cookieParser());
 
 // connectDB();
-// const PORT = process.env.PORT;
 
+// const PORT = process.env.PORT;
 // const server = http.createServer(app);
+
 // const io: Server = new Server(server, {
-//   cors: { origin: "*" },
+//   cors: corsOptions,
 // });
 
+// // Use session middleware with Socket.IO
+// io.use((socket, next) => {
+//   sessionMiddleware(socket.request as any, {} as any, next as any);
+// });
 
-
-// // nofi_socketIo_Config(io)
+// // Use a single socket configuration
 // socketIo_Config(io);
 
 // app.use("/api/", userRoutes);
@@ -178,15 +183,21 @@ io.on("connect_error", (err) => {
 // app.use("/api/post", postRoutes);
 // app.use("/api/connection", connectionRoutes);
 // app.use("/api/chat", chatRoutes);
+
 // app.use(errorHandler);
 
-// // app.listen(PORT, () =>{
-// //   console.log(`server starts running at \x1b[36mhttp://localhost:${PORT}\x1b[0m`)
-// // })
-
 // server.listen(PORT, () => {
-//   // console.log(`server starts running at http://localhost:${PORT}`);
 //   console.log(
-//     `server starts running at \x1b[36mhttp://localhost:${PORT}\x1b[0m`
+//     `Server starts running at \x1b[36mhttp://localhost:${PORT}\x1b[0m`
 //   );
 // });
+
+// // Error handling for socket connections
+// io.on("connect_error", (err) => {
+//   console.log(`Connection error: ${err.message}`);
+// });
+
+
+
+
+
