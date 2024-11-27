@@ -32,10 +32,10 @@ const notificationSchema = new Schema<NotificationInterface>({
     type: Boolean,
     default: false,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
+  // createdAt: {
+  //   type: Date,
+  //   default: Date.now(),
+  // },
 },
 { timestamps: true}
 )

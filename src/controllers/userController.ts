@@ -212,7 +212,7 @@ export const verifyOTPController = asyncHandler(
     delete sessionData.userDetails;
     delete sessionData.otp;
     delete sessionData.otpGeneratedTime;
-    console.log("zzzdat2 : ", sessionData);
+    // console.log("zzzdat2 : ", sessionData);
 
     res
       .status(StatusCodes.OK)
