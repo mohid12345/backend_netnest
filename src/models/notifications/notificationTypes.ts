@@ -8,5 +8,5 @@ export interface NotificationInterface extends Document {
   link: string;
   read: boolean;
   isDeleted: boolean;
-  createdAt: Date;
+  // createdAt: Date;
 }
