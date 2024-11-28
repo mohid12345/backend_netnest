@@ -3,6 +3,9 @@ import {MessageDocument} from './MessagesTypes'
 
 const MessageSchema = new Schema<MessageDocument>(
   {
+    id: {
+      type: Schema.Types.ObjectId,
+      },
     conversationId: {
       type: String,
       required: true,

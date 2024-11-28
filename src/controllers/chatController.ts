@@ -5,6 +5,68 @@ import User from "../models/user/userModel";
 import Conversation from "../models/conversations/conversationModel";
 import Message from "../models/messages/MessagesModel";
 import { s3Upload } from "../utils/cloudStorage/S3Bucket";
+import { Schema } from "mongoose";
+
+
+
+
+export const deleteOneMessage = asyncHandler(
+  async (req: Request, res: Response) => { 
+    try {
+        const { id } = req.query;
+      if (!id) {
+        res.status(400).json({ error: "Message ID is required." });
+        return; 
+      }
+      const result = await Message.findByIdAndDelete(id);
+      if (!result) {
+        res.status(404).json({ error: "Message not found." });
+        return;
+      }
+      res.status(200).json({ message: "Message deleted successfully." });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Internal server error." });
+    }
+  }
+);
+
+// export const deleteOneMessage = asyncHandler(
+//   async (req: Request<{ id: string }>, res: Response): Promise<void> => {  // Return type is now void
+//     try {
+//       // Destructure `id` from query parameters
+//       const { id } = req.query;
+
+//       // Ensure `id` is provided and is a valid string
+//       if (!id || typeof id !== 'string') {
+//         res.status(400).json({ error: "Message ID is required." });
+//         return; // Return explicitly after sending the response
+//       }
+
+//       // Validate the ID format (check if it's a valid MongoDB ObjectId)
+//       if (!Types.ObjectId.isValid(id)) {
+//         res.status(400).json({ error: "Invalid Message ID format." });
+//         return;
+//       }
+
+//       // Attempt to delete the message by ID
+//       const result = await Message.findByIdAndDelete(id);
+
+//       // If message not found
+//       if (!result) {
+//         res.status(404).json({ error: "Message not found." });
+//         return;
+//       }
+
+//       // Success response
+//       res.status(200).json({ message: "Message deleted successfully." });
+//     } catch (err) {
+//       // Handle unexpected errors
+//       console.error(err);
+//       res.status(500).json({ error: "Internal server error." });
+//     }
+//   }
+// );
 
 
 export const getEligibleUsersController = asyncHandler(
@@ -258,6 +320,9 @@ export const getMessagesController = asyncHandler(
     }
   }
 );
+
+
+
 
 // get last message
 export const getLastMessageController = asyncHandler(
