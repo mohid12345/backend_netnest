@@ -1,6 +1,7 @@
 import { Document, Types } from "mongoose";
 
 export interface MessageDocument {
+  id?: Types.ObjectId;
   conversationId: string;
   sender: Types.ObjectId;
   text: string;
