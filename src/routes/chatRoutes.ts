@@ -13,6 +13,7 @@ import {
   getUserConversationController,
   setMessageReadController,
   deleteOneMessage,
+  deleteConversation,
 } from "../controllers/chatController";
 
 //  message routes
@@ -23,6 +24,7 @@ router.get('/get-last-messages', getLastMessageController)
 router.patch('/set-message-read', setMessageReadController)
 router.post('/get-unread-messages', getUnReadMessageController)
 router.delete('/delete-one', deleteOneMessage)
+router.delete('/delete-conv', deleteConversation)
 
 // conversation routes
 router.post("/add-conversation", addConversationController)

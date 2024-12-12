@@ -204,7 +204,7 @@ export const verifyOTPController = asyncHandler(
       email: userDetails.email,
       password: userDetails.password,
     });
-    console.log("zzzzdat1 :", user);
+    // console.log("zzzzdat1 :", user);
 
     await Connections.create({
       userId: user._id,

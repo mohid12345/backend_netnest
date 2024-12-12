@@ -31,6 +31,29 @@ export const deleteOneMessage = asyncHandler(
   }
 );
 
+export const deleteConversation = asyncHandler(
+  async (req: Request, res: Response) => { 
+    console.log('hyumoooooo');
+    
+    try {
+        const { id } = req.query;
+      if (!id) {
+        res.status(400).json({ error: "Convesation ID is required." });
+        return; 
+      }
+      const result = await Conversation.findByIdAndDelete(id);
+      if (!result) {
+        res.status(404).json({ error: "Convesation not found." });
+        return;
+      }
+      res.status(200).json({ message: "Convesation deleted successfully." });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Internal server error." });
+    }
+  }
+);
+
 // export const deleteOneMessage = asyncHandler(
 //   async (req: Request<{ id: string }>, res: Response): Promise<void> => {  // Return type is now void
 //     try {

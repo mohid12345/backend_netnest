@@ -6,6 +6,5 @@ const refreshTokenSchema = new mongoose.Schema({
 createdAt: { type: Date, default: Date.now, expires: '7d' }, // Automatically remove after 7 days
 });
 
-// module.exports = mongoose.model('RefreshToken', refreshTokenSchema);
 export default mongoose.model('RefreshToken', refreshTokenSchema);
 
