@@ -9,6 +9,7 @@ import Comment from "../models/comment/commentModel";
 import { createNotification } from "../helpers/notificationHelpers";
 // import notificationSocket from "../utils/socket/notificationSocket";
 import { Server } from "socket.io";
+import { StatusCodes } from "http-status-codes";
 
 
 // Accept `io` as a parameter
@@ -77,7 +78,7 @@ import { Server } from "socket.io";
 //       })
 //       .sort({ date: -1 });
 
-//     res.status(200).json({ posts });
+//     res.status(StatusCodes.OK).json({ posts });
 //   });
 
 
@@ -95,7 +96,7 @@ export const addPostController = asyncHandler(
     console.log("addPost details",post);
 
     if(!post) {
-      res.status(400).json({message: "Unable to add post"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "Unable to add post"})
     }
 
     const posts = await Post.find({isBlocked: false, isDeleted: false})
@@ -112,7 +113,7 @@ export const addPostController = asyncHandler(
       select: "userName profileImg isVerified",
     })
     .sort({date: -1})
-    res.status(200).json({message: "Post added succussfully", posts})
+    res.status(StatusCodes.OK).json({message: "Post added succussfully", posts})
   }
 )
 
@@ -137,7 +138,7 @@ export const getUserPostController = asyncHandler(
     })
     .sort({date: -1})
     // console.log("userposts", posts)
-    res.status(200).json(posts)
+    res.status(StatusCodes.OK).json(posts)
   }
 )
 
@@ -196,7 +197,7 @@ export const singlePostController = asyncHandler(
 //       })
 //       .sort({date: -1})
 //       // console.log(posts);
-//       res.status(200).json(posts)
+//       res.status(StatusCodes.OK).json(posts)
 //   }
 // )
 
@@ -251,9 +252,9 @@ export const getPostController = asyncHandler(
         // console.log('log post bakend :', posts);
         
         
-      res.status(200).json(posts);
+      res.status(StatusCodes.OK).json(posts);
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
@@ -287,7 +288,7 @@ export const savePostController = asyncHandler(
     }
     const updatedUser = await User.findById(userId);
     console.log("saved post",user.savedPost);
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       message: mssg,
       _id: updatedUser?.id,
       userName: updatedUser?.userName,
@@ -322,9 +323,9 @@ export const savePostController = asyncHandler(
 //         "userId"
 //       );
 //       // console.log("saved posts",posts);
-//       res.status(200).json(posts)
+//       res.status(StatusCodes.OK).json(posts)
 //     } else {
-//       res.status(400);
+//       res.status(StatusCodes.BAD_REQUEST);
 //       throw new Error("User not found")
 //     }
 //   }
@@ -354,13 +355,13 @@ export const getSavedPostController = asyncHandler(
 
         const validPosts = posts.filter(post => post.userId !== null);
 
-        res.status(200).json(validPosts);
+        res.status(StatusCodes.OK).json(validPosts);
       } else {
-        res.status(400);
+        res.status(StatusCodes.BAD_REQUEST);
         throw new Error("User not found");
       }
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
@@ -387,7 +388,7 @@ export const deletePostController = asyncHandler(
       select: "userName name profileImg isVerified",
     })
     .sort({data: -1})
-    res.status(200).json({posts})
+    res.status(StatusCodes.OK).json({posts})
   }
 )
 
@@ -398,7 +399,7 @@ export const getEditPostController = asyncHandler(
     if(!post) {
       throw new Error("Post Cannot be found");
     }
-    res.status(200).json(post)
+    res.status(StatusCodes.OK).json(post)
   }
 )
 
@@ -408,7 +409,7 @@ export const updatePostController = asyncHandler(
     // console.log(postId, userId, title, description);
     const post = await Post.findById(postId)
     if (!post) {
-      res.status(400);
+      res.status(StatusCodes.BAD_REQUEST);
       throw new Error("Post cannot be found");
     }
     if (title) post.title = title;
@@ -423,7 +424,7 @@ export const updatePostController = asyncHandler(
       select: "userName name profileImg isVerified",
     })
     .sort({ date: -1 });
-    res.status(200).json(posts)
+    res.status(StatusCodes.OK).json(posts)
   }
 )
 
@@ -435,7 +436,7 @@ export const reportPostController = asyncHandler(
     // console.log(userId, postId, reason);
     const existingReport = await Report.findOne({userId, postId})
     if(existingReport) {
-      res.status(400).json({message: "You have already reported this post."})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "You have already reported this post."})
       return
     }
     const report = new Report({
@@ -450,10 +451,10 @@ export const reportPostController = asyncHandler(
     const REPORT_COUNT_LIMIT = 3  
     if(reportCount >= REPORT_COUNT_LIMIT) {
       await Post.findByIdAndUpdate(postId, {isBlocked:true})
-      res.status(200).json({ message: "Post has been blocked due to multiple reports."});
+      res.status(StatusCodes.OK).json({ message: "Post has been blocked due to multiple reports."});
       return
     }
-    res.status(200).json({ message: "Post has been reported successfully." });
+    res.status(StatusCodes.OK).json({ message: "Post has been reported successfully." });
   }
 )
 
@@ -505,7 +506,7 @@ export const likePostController = asyncHandler(
     })
     .sort({date: -1})
     // console.log("posts while like",posts);
-    res.status(200).json({posts})
+    res.status(StatusCodes.OK).json({posts})
   }
 )
 
@@ -528,7 +529,7 @@ export const likePostController = asyncHandler(
 //     })
 //     .sort({createdAt: -1})
 //     // console.log("get comments",comments);
-//     res.status(200).json({comments})
+//     res.status(StatusCodes.OK).json({comments})
 //   }
 // )
 
@@ -557,9 +558,9 @@ export const getPostCommentsController = asyncHandler(
         comment.replyComments = comment.replyComments.filter(reply => reply.userId !== null);
       });
 
-      res.status(200).json({ comments: validComments });
+      res.status(StatusCodes.OK).json({ comments: validComments });
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
@@ -600,7 +601,7 @@ export const addCommentController = asyncHandler(
       select: "userName name profileImg"
     })
     .sort({ createdAt: -1 });
-    res.status(200).json({message: "Comment added succussfully", comments})
+    res.status(StatusCodes.OK).json({message: "Comment added succussfully", comments})
   }
 )
 
@@ -629,7 +630,7 @@ export const deleteCommentController = asyncHandler(
       select: "userName name profileImg"
     })
     .sort({ createdAt: -1 });
-    res.status(200).json({message: "Comment deleted succussfully", comments})
+    res.status(StatusCodes.OK).json({message: "Comment deleted succussfully", comments})
   }
 )
 
@@ -639,7 +640,7 @@ export const deleteReplyCommentController = asyncHandler(
     const {commentId, replyUser, replyTime} = req.body
 
     // if (!mongoose.Types.ObjectId.isValid(commentId) || !mongoose.Types.ObjectId.isValid(replyUser)) {
-    //   res.status(400).json({ message: 'Invalid ID format' });
+    //   res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid ID format' });
     //   return
     // }
   
@@ -672,7 +673,7 @@ export const deleteReplyCommentController = asyncHandler(
       select: "userName name profileImg"
     })
     .sort({ createdAt: -1 });
-    res.status(200).json({message: "Comment deleted succussfully", comments})
+    res.status(StatusCodes.OK).json({message: "Comment deleted succussfully", comments})
   }
 )
 
@@ -707,7 +708,7 @@ export const ReplyCommentController = asyncHandler(
       select: "userName name profileImg"
     })
     .sort({ createdAt: -1 });
-    res.status(200).json({message: "Reply Comment added succussfully", comments})
+    res.status(StatusCodes.OK).json({message: "Reply Comment added succussfully", comments})
   }
 )
 
@@ -721,7 +722,7 @@ export const getCommentsCount = asyncHandler(
       isDeleted: false,
     })
     // console.log("count",commentCounts);
-    res.status(200).json({commentCounts})
+    res.status(StatusCodes.OK).json({commentCounts})
   }
 )
 
@@ -731,7 +732,7 @@ export const handlePostCommentController = asyncHandler(
     // console.log("manage commetn",postId);
     const post = await Post.findById(postId)
     if(!post) {
-      res.status(400).json({message: "post not found"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "post not found"})
       return
     }
     post.hideComment = !post.hideComment
@@ -747,7 +748,7 @@ export const handlePostCommentController = asyncHandler(
     })
     .sort({date: -1})
     const commentState = post.hideComment ? "Comment is hidden" : "Comment is visible"
-    res.status(200).json({message: `${commentState}`, posts})
+    res.status(StatusCodes.OK).json({message: `${commentState}`, posts})
   }
 )
 
@@ -757,7 +758,7 @@ export const handlePostLikeController = asyncHandler(
     // console.log("manage like",postId, userId);
     const post = await Post.findById(postId)
     if(!post) {
-      res.status(400).json({message: "post not found"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "post not found"})
       return
     }
     post.hideLikes = !post.hideLikes
@@ -773,7 +774,7 @@ export const handlePostLikeController = asyncHandler(
     })
     .sort({date: -1})
     const likeState = post.hideLikes ? "Like is hidden" : "Like is visible"
-    res.status(200).json({message: `${likeState}`, posts})
+    res.status(StatusCodes.OK).json({message: `${likeState}`, posts})
   }
 )
 
@@ -805,9 +806,9 @@ export const getExplorePostController = asyncHandler(
       });
       
 
-      res.status(200).json(validPosts);
+      res.status(StatusCodes.OK).json(validPosts);
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
