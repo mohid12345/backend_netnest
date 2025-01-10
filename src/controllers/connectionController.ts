@@ -3,6 +3,7 @@ import asyncHandler from "express-async-handler";
 import User from "../models/user/userModel";
 import Connections from "../models/connections/connectionModel";
 import { createNotification } from "../helpers/notificationHelpers";
+import { StatusCodes } from "http-status-codes";
 
 export const getConnectionController = asyncHandler(
   async(req:Request, res:Response) => {
@@ -18,7 +19,7 @@ export const getConnectionController = asyncHandler(
         match: { isBlocked: false, isDeleted: false }
       });
     //  console.log("get connectioin", connection);
-    res.status(200).json({ connection })
+    res.status(StatusCodes.OK).json({ connection })
   }
 )
 
@@ -28,7 +29,7 @@ export const followUserController = asyncHandler(async (req: Request, res: Respo
   const followingUserInfo = await User.findById(followingUser);
   let followed = false;
   if (!followingUserInfo) {
-    res.status(400);
+    res.status(StatusCodes.BAD_REQUEST);
     throw new Error("User not found");
   }
 
@@ -82,7 +83,7 @@ export const followUserController = asyncHandler(async (req: Request, res: Respo
   });
   console.log(followingUserConnections);
   res
-    .status(200)
+    .status(StatusCodes.OK)
     .json({ success: true, message: "User followed successfully", followed });
 });
 
@@ -100,7 +101,7 @@ export const unFollowUserController = asyncHandler(
       {$pull: {following: unfollowingUser, requested: unfollowingUser}}
     )
 
-    res.status(200).json({success: true, message: "User unfollowed successfully"})
+    res.status(StatusCodes.OK).json({success: true, message: "User unfollowed successfully"})
   }
 )
 
@@ -140,7 +141,7 @@ export const acceptRequestController = asyncHandler(
         select: "userName name profileImg isVerified",
       });
           res
-      .status(200)
+      .status(StatusCodes.OK)
       .json({ success: true, message: "Follow request accepted successfully",connections:connections?.requested });
   }
 );
@@ -168,7 +169,7 @@ export const rejectRequestController = asyncHandler(
       // console.log("reject request")
 
     res
-      .status(200)
+      .status(StatusCodes.OK)
       .json({ success: true, message: "Follow request rejected successfully" ,connections:connections?.requested});
   }
 );
@@ -183,6 +184,6 @@ export const getFollowRequestsController = asyncHandler(
       select: "userName name profileImg isVerified",
     });
     // console.log("manage request",requests?.requested);
-    res.status(200).json({ requests: requests?.requested });
+    res.status(StatusCodes.OK).json({ requests: requests?.requested });
   }
 );

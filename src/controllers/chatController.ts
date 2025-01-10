@@ -6,6 +6,8 @@ import Conversation from "../models/conversations/conversationModel";
 import Message from "../models/messages/MessagesModel";
 import { s3Upload } from "../utils/cloudStorage/S3Bucket";
 import { Schema } from "mongoose";
+import { StatusCodes } from "http-status-codes";
+
 
 
 
@@ -15,7 +17,7 @@ export const deleteOneMessage = asyncHandler(
     try {
         const { id } = req.query;
       if (!id) {
-        res.status(400).json({ error: "Message ID is required." });
+        res.status(StatusCodes.BAD_REQUEST).json({ error: "Message ID is required." });
         return; 
       }
       const result = await Message.findByIdAndDelete(id);
@@ -23,10 +25,10 @@ export const deleteOneMessage = asyncHandler(
         res.status(404).json({ error: "Message not found." });
         return;
       }
-      res.status(200).json({ message: "Message deleted successfully." });
+      res.status(StatusCodes.OK).json({ message: "Message deleted successfully." });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: "Internal server error." });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server error." });
     }
   }
 );
@@ -38,7 +40,7 @@ export const deleteConversation = asyncHandler(
     try {
         const { id } = req.query;
       if (!id) {
-        res.status(400).json({ error: "Convesation ID is required." });
+        res.status(StatusCodes.BAD_REQUEST).json({ error: "Convesation ID is required." });
         return; 
       }
       const result = await Conversation.findByIdAndDelete(id);
@@ -46,10 +48,10 @@ export const deleteConversation = asyncHandler(
         res.status(404).json({ error: "Convesation not found." });
         return;
       }
-      res.status(200).json({ message: "Convesation deleted successfully." });
+      res.status(StatusCodes.OK).json({ message: "Convesation deleted successfully." });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: "Internal server error." });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server error." });
     }
   }
 );
@@ -62,13 +64,13 @@ export const deleteConversation = asyncHandler(
 
 //       // Ensure `id` is provided and is a valid string
 //       if (!id || typeof id !== 'string') {
-//         res.status(400).json({ error: "Message ID is required." });
+//         res.status(StatusCodes.BAD_REQUEST).json({ error: "Message ID is required." });
 //         return; // Return explicitly after sending the response
 //       }
 
 //       // Validate the ID format (check if it's a valid MongoDB ObjectId)
 //       if (!Types.ObjectId.isValid(id)) {
-//         res.status(400).json({ error: "Invalid Message ID format." });
+//         res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid Message ID format." });
 //         return;
 //       }
 
@@ -82,11 +84,11 @@ export const deleteConversation = asyncHandler(
 //       }
 
 //       // Success response
-//       res.status(200).json({ message: "Message deleted successfully." });
+//       res.status(StatusCodes.OK).json({ message: "Message deleted successfully." });
 //     } catch (err) {
 //       // Handle unexpected errors
 //       console.error(err);
-//       res.status(500).json({ error: "Internal server error." });
+//       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server error." });
 //     }
 //   }
 // );
@@ -105,9 +107,9 @@ export const getEligibleUsersController = asyncHandler(
       // $or: [{isPrivate: false}, {_id: {$in: followingUsers}}]
       const users = await User.find(validUsers)
       // console.log("eligible users", users);
-      res.status(200).json(users)
+      res.status(StatusCodes.OK).json(users)
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 )
@@ -124,7 +126,7 @@ export const addConversationController = asyncHandler(
       select: "userName name profileImg isVerified",
     })
     if(existConversation) {
-      res.status(200).json(existConversation)
+      res.status(StatusCodes.OK).json(existConversation)
       return
     }
     const newConversation = new Conversation({
@@ -137,9 +139,9 @@ export const addConversationController = asyncHandler(
         path: "members",
         select: "userName name profileImg isVerified", 
       })
-      res.status(200).json(conversation)
+      res.status(StatusCodes.OK).json(conversation)
     } catch (err) { 
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 )
@@ -169,9 +171,9 @@ export const getUserConversationController = asyncHandler(
         (conversation) => conversation !== null
       )
       // console.log("conversations", filteredConversations);
-      res.status(200).json(filteredConversations)
+      res.status(StatusCodes.OK).json(filteredConversations)
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 )
@@ -182,9 +184,9 @@ export const findConversationController = asyncHandler(
       const conversation = await Conversation.findOne({
         members: {$all: [req.params.firstUserId, req.params.secondUserId]},
       })
-      res.status(200).json({conversation})
+      res.status(StatusCodes.OK).json({conversation})
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   } 
 )
@@ -246,9 +248,9 @@ export const findConversationController = asyncHandler(
 
 //       const savedMessages = await newMessage.save();
 //       console.log("savedMessages", savedMessages);
-//       res.status(200).json(savedMessages);
+//       res.status(StatusCodes.OK).json(savedMessages);
 //     } catch (err) {
-//       res.status(500).json(err);
+//       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
 //     }
 //   }
 // );
@@ -310,9 +312,9 @@ export const addMessageController = asyncHandler(
       );
 
       const savedMessages = await newMessage.save();
-      res.status(200).json(savedMessages);
+      res.status(StatusCodes.OK).json(savedMessages);
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
@@ -337,9 +339,9 @@ export const getMessagesController = asyncHandler(
         select: "userName name profileImg isVerified",
       });
       
-      res.status(200).json(messages);
+      res.status(StatusCodes.OK).json(messages);
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
@@ -367,9 +369,9 @@ export const getLastMessageController = asyncHandler(
       ];
 
       const lastMessages = await Message.aggregate(pipeline);
-      res.status(200).json(lastMessages);
+      res.status(StatusCodes.OK).json(lastMessages);
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 )
@@ -383,9 +385,9 @@ export const setMessageReadController = asyncHandler(
         { conversationId: conversationId, sender: { $ne: userId } },
         { $set: { isRead: true }}
       )
-      res.status(200).json({messages})
+      res.status(StatusCodes.OK).json({messages})
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 )
@@ -400,9 +402,9 @@ export const getUnReadMessageController = asyncHandler(
         sender: { $ne: userId },
         isRead: false,
       })
-      res.status(200).json({messages})
+      res.status(StatusCodes.OK).json({messages})
     } catch (err) {
-      res.status(500).json(err);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 )

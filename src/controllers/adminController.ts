@@ -5,6 +5,8 @@ import generateAdminToken from "../utils/generateAdminToken";
 import User from "../models/user/userModel";
 import Post from "../models/post/postModel";
 import Report from "../models/report/reportModel";
+import { StatusCodes } from "http-status-codes";
+
 
 
 export const LoginController = asyncHandler(
@@ -13,7 +15,7 @@ export const LoginController = asyncHandler(
         const admin = await Admin.findOne({email})
          // console.log("email & password", email, password);
          if(admin && password == admin.password){
-            res.status(200).json({
+            res.status(StatusCodes.OK).json({
                 message: "Login Successfull",
                 _id: admin.id,
                 name: admin.name,
@@ -22,7 +24,7 @@ export const LoginController = asyncHandler(
                 token: generateAdminToken(admin.id)
             })
          } else {
-            res.status(400).json({message: "Invalid Credentials"})
+            res.status(StatusCodes.BAD_REQUEST).json({message: "Invalid Credentials"})
          }
     }
 )
@@ -31,9 +33,9 @@ export const getUsersController= asyncHandler(
     async(req: Request, res: Response) => {
         const users = await User.find({}).sort({date: -1})
         if(users){
-            res.status(200).json({users})
+            res.status(StatusCodes.OK).json({users})
         } else {
-            res.status(400).json({message: "User not found"})
+            res.status(StatusCodes.BAD_REQUEST).json({message: "User not found"})
         }
     }
 )
@@ -45,14 +47,14 @@ export const userBlockController = asyncHandler(
       const user = await User.findById(userId)
       // console.log(user);
       if(!user) {
-        res.status(400).json({message: "User not found"})
+        res.status(StatusCodes.BAD_REQUEST).json({message: "User not found"})
         return
       }
       user.isBlocked = !user.isBlocked
       await user.save()
       const users = await User.find({}).sort({date: -1})
       const blockedUser = user.isBlocked ? "Blocked" : "Unblocked"
-      res.status(200).json({users, message: `${user.userName} has been ${blockedUser}`})
+      res.status(StatusCodes.OK).json({users, message: `${user.userName} has been ${blockedUser}`})
     }
   )
 
@@ -65,9 +67,9 @@ export const getPostsController = asyncHandler(
       select: "userName profileImg",
     })
     if(posts) {
-      res.status(200).json({posts})
+      res.status(StatusCodes.OK).json({posts})
     } else {
-      res.status(400).json({message: "Post not found"})
+      res.status(StatusCodes.BAD_REQUEST).json({message: "Post not found"})
     }
   }
 )
@@ -87,7 +89,7 @@ export const getPostsController = asyncHandler(
         totalUsers,
         totalPosts,
       }
-      res.status(200).json(status)
+      res.status(StatusCodes.OK).json(status)
     }
   )
 
@@ -100,7 +102,7 @@ export const getPostsController = asyncHandler(
       const post = await Post.findById(postId);
       
       if (!post) {
-        res.status(400);
+        res.status(StatusCodes.BAD_REQUEST);
         throw new Error("Post not found");
       }
       post.isBlocked = !post.isBlocked;    
@@ -109,7 +111,7 @@ export const getPostsController = asyncHandler(
       const posts = await Post.find({}).sort({ date: -1 }).lean();    
       const blockedPost = post.isBlocked ? "Blocked" : "Unblocked";
       
-      res.status(200).json({ posts, message: `${post.title} has been ${blockedPost}` });
+      res.status(StatusCodes.OK).json({ posts, message: `${post.title} has been ${blockedPost}` });
     }
   );
 
@@ -126,7 +128,7 @@ export const getPostsController = asyncHandler(
       console.log(reports)
       if(reports) {
         console.log("reports", reports);
-        res.status(200).json({reports})
+        res.status(StatusCodes.OK).json({reports})
       } else {
         res.status(404).json({messsage: "No reports found"})
       }
