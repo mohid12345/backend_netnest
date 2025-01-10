@@ -1,19 +1,10 @@
-// import { Request, Response } from 'express';
-// import { StatusCodes } from "http-status-codes";
-// import asyncHandler from "express-async-handler";
 import speakeasy from "speakeasy";
 import bcrypt from "bcrypt";
 import User from "../models/user/userModel";
-// import sendVerifyMail from "../utils/sendVerifyEmail";
 import generateToken from "../utils/generateToken";
 import generateRefreshToken from "../utils/generateRefreshToken";
 import Connections from "../models/connections/connectionModel";
 import RefreshToken from "../models/token/tokenModel";
-// import { findUserByEmail, findUserByUsername, createUser, createConnection } from '../respository/UserRepository';
-// import { UserService } from '../services/userServices';
-
-// method 3 with class base  repository
-
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import asyncHandler from "express-async-handler";
@@ -22,36 +13,39 @@ import { UserRepository } from "../respository/UserRepository";
 import sendVerifyMail from "../utils/sendVerifyEmail";
 import jwt from "jsonwebtoken";
 
-// export const userRegisterController = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const userRepository = new UserRepository();
-//     const userService = new UserService(userRepository);
 
-//     try {
-//       const { otp, sessionData } = await userService.registerUser(req.body);
+// method 3 with class base  repository
 
-//       // Update session
-//       req.session!.userDetails = sessionData.userDetails;
-//       req.session!.otp = sessionData.otp;
-//       req.session!.otpGeneratedTime = sessionData.otpGeneratedTime;
+export const userRegisterController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userRepository = new UserRepository();
+    const userService = new UserService(userRepository);
 
-//       await sendVerifyMail(req, req.body.userName, req.body.email);
+    try {
+      const { otp, sessionData } = await userService.registerUser(req.body);
 
-//       console.log("Register session data:", req.session);
-//       res
-//         .status(StatusCodes.OK)
-//         .json({ message: "OTP sent for verification", email: req.body.email });
-//     } catch (error) {
-//       if (error instanceof Error) {
-//         res.status(StatusCodes.CONFLICT).json({ message: error.message });
-//       } else {
-//         res
-//           .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//           .json({ message: "An unexpected error occurred" });
-//       }
-//     }
-//   }
-// );
+      // Update session
+      req.session!.userDetails = sessionData.userDetails;
+      req.session!.otp = sessionData.otp;
+      req.session!.otpGeneratedTime = sessionData.otpGeneratedTime;
+
+      await sendVerifyMail(req, req.body.userName, req.body.email);
+
+      console.log("Register session data:", req.session);
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "OTP sent for verification", email: req.body.email });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(StatusCodes.CONFLICT).json({ message: error.message });
+      } else {
+        res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ message: "An unexpected error occurred" });
+      }
+    }
+  }
+);
 
 // method 2 working
 
@@ -129,37 +123,37 @@ import jwt from "jsonwebtoken";
 
 // Register new user
 
-export const userRegisterController = asyncHandler(
-  async (req:Request, res:Response) => {
-    // console.log("req body 00", req.body);
+// export const userRegisterController = asyncHandler(
+//   async (req:Request, res:Response) => {
+//     // console.log("req body 00", req.body);
 
-    const {userName, email, password} = req.body
+//     const {userName, email, password} = req.body
 
-    const userEmail = await User.findOne({email})
-    if(userEmail) {
-      res.status(StatusCodes.CONFLICT).json({message: "Email already exist"})
-    }
-    const userId = await User.findOne({userName})
-    if(userId) {
-      res.status(StatusCodes.CONFLICT).json({message: "UserName already exist"})
-    }
-    const otp = speakeasy.totp({
-      secret: speakeasy.generateSecret({ length: 20 }).base32,
-      digits: 4,
-    })
-    const sessionData = req.session!;
-    sessionData.userDetails = {userName, email, password}
-    sessionData.otp = otp;
-    sessionData.otpGeneratedTime = Date.now()
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
+//     const userEmail = await User.findOne({email})
+//     if(userEmail) {
+//       res.status(StatusCodes.CONFLICT).json({message: "Email already exist"})
+//     }
+//     const userId = await User.findOne({userName})
+//     if(userId) {
+//       res.status(StatusCodes.CONFLICT).json({message: "UserName already exist"})
+//     }
+//     const otp = speakeasy.totp({
+//       secret: speakeasy.generateSecret({ length: 20 }).base32,
+//       digits: 4,
+//     })
+//     const sessionData = req.session!;
+//     sessionData.userDetails = {userName, email, password}
+//     sessionData.otp = otp;
+//     sessionData.otpGeneratedTime = Date.now()
+//     const salt = await bcrypt.genSalt(10)
+//     const hashedPassword = await bcrypt.hash(password, salt)
 
-    sessionData.userDetails!.password = hashedPassword
-    sendVerifyMail(req, userName, email)
-    console.log("register session0", sessionData);
-    res.status(StatusCodes.OK).json({ message: "OTP sent for verification ", email });
-  }
-)
+//     sessionData.userDetails!.password = hashedPassword
+//     sendVerifyMail(req, userName, email)
+//     console.log("register session0", sessionData);
+//     res.status(StatusCodes.OK).json({ message: "OTP sent for verification ", email });
+//   }
+// )
 
 // register otp verification
 
@@ -486,6 +480,7 @@ export const refreshTheToken = asyncHandler(
     }
   }
 );
+// flkjdsfkds
 
 //Logout with removing refresh token from db
 export const userLogoutController = asyncHandler(
