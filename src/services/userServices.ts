@@ -2,7 +2,7 @@
 import { UserRepository } from "../respository/UserRepository";
 import speakeasy from "speakeasy";
 import bcrypt from "bcrypt";
-import { IUserDetails } from "../models/user/userTypez"; // You'll need to create this interface
+import { IUserDetails } from "../models/user/userTypez";
 
 export class UserService {
   private userRepository: UserRepository;
