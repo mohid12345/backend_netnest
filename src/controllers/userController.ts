@@ -18,11 +18,11 @@ import jwt from "jsonwebtoken";
 
 export const userRegisterController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userRepository = new UserRepository();
-    const userService = new UserService(userRepository);
+    const userRepository = new UserRepository();  // Instantiating the repository
+    const userService = new UserService(userRepository);   // Injecting the repository into the service layer
 
     try {
-      const { otp, sessionData } = await userService.registerUser(req.body);
+      const { otp, sessionData } = await userService.registerUser(req.body);//calling the service called registerUser
 
       // Update session
       req.session!.userDetails = sessionData.userDetails;

@@ -8,10 +8,6 @@ import { s3Upload } from "../utils/cloudStorage/S3Bucket";
 import { Schema } from "mongoose";
 import { StatusCodes } from "http-status-codes";
 
-
-
-
-
 export const deleteOneMessage = asyncHandler(
   async (req: Request, res: Response) => { 
     try {
@@ -35,7 +31,6 @@ export const deleteOneMessage = asyncHandler(
 
 export const deleteConversation = asyncHandler(
   async (req: Request, res: Response) => { 
-    console.log('hyumoooooo');
     
     try {
         const { id } = req.query;
@@ -191,76 +186,6 @@ export const findConversationController = asyncHandler(
   } 
 )
 
-// add message
-// export const addMessageController = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     try {
-//       const { conversationId, sender, text, sharedPost } = req.body;
-//       // console.log("all msg details", conversationId, sender, text, sharedPost);
-//       // console.log("sharedPost", sharedPost);
-//       let content = text;
-//       let attachment = null;
-//       let sharedPostData = null;
-
-//       if (req.file) {
-//         let type: string;
-//         if (req.file.mimetype.startsWith("image/")) {
-//           type = "image";
-//         } else if (req.file.mimetype.startsWith("video/")) {
-//           type = "video";
-//         } else if (req.file.mimetype.startsWith("audio/")) {
-//           type = "audio";
-//         } else {
-//           type = "file";
-//         }
-//         console.log("req.file", req.file);
-//         const fileUrl = await s3Upload(req.file);
-//         console.log("fileurl", fileUrl);
-//         attachment = {
-//           type: type,
-//           url: fileUrl,
-//           filename: fileUrl,
-//           size: req.file.size,
-//         };
-//         content = req.body.messageType;
-//       }
-
-//       if (sharedPost) {
-//         sharedPostData = sharedPost; // Parse the sharedPost data
-//       }
-//       // console.log("sharedPostData", sharedPostData);
-
-//       const newMessage = new Message({
-//         conversationId,
-//         sender,
-//         text: content,
-//         attachment,
-//         sharedPost: sharedPostData,
-//       });
-//       // console.log("newMessage", newMessage);
-
-//       await Conversation.findByIdAndUpdate(
-//         conversationId,
-//         { updatedAt: Date.now() },
-//         { new: true }
-//       );
-//       console.log("conversation updated");
-
-//       const savedMessages = await newMessage.save();
-//       console.log("savedMessages", savedMessages);
-//       res.status(StatusCodes.OK).json(savedMessages);
-//     } catch (err) {
-//       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
-//     }
-//   }
-// );
-
-
-//send messag 2 
-
-// interface MulterRequest extends Request {
-//   file?: Express.Multer.File; // Make it optional because not every request has a file
-// }
 
 // Add message
 export const addMessageController = asyncHandler(

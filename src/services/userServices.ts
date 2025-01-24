@@ -1,4 +1,3 @@
-// userService.ts
 import { UserRepository } from "../respository/UserRepository";
 import speakeasy from "speakeasy";
 import bcrypt from "bcrypt";
@@ -7,7 +6,7 @@ import { IUserDetails } from "../models/user/userTypez";
 export class UserService {
   private userRepository: UserRepository;
 
-  constructor(userRepository: UserRepository) {
+  constructor(userRepository: UserRepository) {//userServices expect a userRep, and this is wheere DI happens
     this.userRepository = userRepository;
   }
 
