@@ -13,7 +13,7 @@ import connectionRoutes from "./routes/connectionRoutes";
 import errorHandler from "./middlewares/errorMiddleware";
 import { Server } from "socket.io";
 import socketIo_Config from "./utils/socket/socket"; // Existing socket configuration
-import notificationSocket from "./utils/socket/notificationSocket"; // New notification socket
+import { notificationSocket } from "./utils/socket/notificationSocket"; // New notification socket
 import cookieParser from "cookie-parser";
 
 dotenv.config();
