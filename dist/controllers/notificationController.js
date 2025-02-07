@@ -15,23 +15,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNotifications = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const notificationModel_1 = __importDefault(require("../models/notifications/notificationModel"));
-// export const getNotifications = asyncHandler(
-// )
+const http_status_codes_1 = require("http-status-codes");
 exports.getNotifications = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.body.userId;
-        // console.log("userId", userId);
         const notifications = yield notificationModel_1.default.find({ receiverId: userId })
             .populate({
             path: 'senderId',
             select: 'userName name profileImg',
         })
             .sort({ createdAt: -1 });
-        // console.log("notifications", notifications);
-        res.status(200).json({ notifications: notifications });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ notifications: notifications });
     }
     catch (error) {
         console.error('Error fetching notifications:', error);
-        res.status(500).json({ message: 'Error fetching notifications' });
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching notifications' });
     }
 }));
