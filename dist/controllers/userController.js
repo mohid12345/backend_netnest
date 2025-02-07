@@ -13,47 +13,46 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAccountController = exports.verifyOTPForEmailController = exports.verifyEmailForEmailController = exports.switchAccountController = exports.changePasswordController = exports.userSearchController = exports.getUserDetailsController = exports.getAllUsersController = exports.editProfileController = exports.userSuggestionsController = exports.googleAuthController = exports.userLogoutController = exports.refreshTheToken = exports.userLoginController = exports.resetPasswordController = exports.forgotOtpController = exports.forgotPasswordController = exports.resendOTPController = exports.verifyOTPController = exports.userRegisterController = void 0;
-// import { Request, Response } from 'express';
-// import { StatusCodes } from "http-status-codes";
-// import asyncHandler from "express-async-handler";
 const speakeasy_1 = __importDefault(require("speakeasy"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const userModel_1 = __importDefault(require("../models/user/userModel"));
-// import sendVerifyMail from "../utils/sendVerifyEmail";
 const generateToken_1 = __importDefault(require("../utils/generateToken"));
 const generateRefreshToken_1 = __importDefault(require("../utils/generateRefreshToken"));
 const connectionModel_1 = __importDefault(require("../models/connections/connectionModel"));
 const tokenModel_1 = __importDefault(require("../models/token/tokenModel"));
 const http_status_codes_1 = require("http-status-codes");
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
+const userServices_1 = require("../services/userServices");
+const UserRepository_1 = require("../respository/UserRepository");
 const sendVerifyEmail_1 = __importDefault(require("../utils/sendVerifyEmail"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-// export const userRegisterController = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const userRepository = new UserRepository();
-//     const userService = new UserService(userRepository);
-//     try {
-//       const { otp, sessionData } = await userService.registerUser(req.body);
-//       // Update session
-//       req.session!.userDetails = sessionData.userDetails;
-//       req.session!.otp = sessionData.otp;
-//       req.session!.otpGeneratedTime = sessionData.otpGeneratedTime;
-//       await sendVerifyMail(req, req.body.userName, req.body.email);
-//       console.log("Register session data:", req.session);
-//       res
-//         .status(StatusCodes.OK)
-//         .json({ message: "OTP sent for verification", email: req.body.email });
-//     } catch (error) {
-//       if (error instanceof Error) {
-//         res.status(StatusCodes.CONFLICT).json({ message: error.message });
-//       } else {
-//         res
-//           .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//           .json({ message: "An unexpected error occurred" });
-//       }
-//     }
-//   }
-// );
+// method 3 with class base  repository
+exports.userRegisterController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userRepository = new UserRepository_1.UserRepository(); // Instantiating the repository
+    const userService = new userServices_1.UserService(userRepository); // Injecting the repository into the service layer
+    try {
+        const { otp, sessionData } = yield userService.registerUser(req.body); //calling the service called registerUser
+        // Update session
+        req.session.userDetails = sessionData.userDetails;
+        req.session.otp = sessionData.otp;
+        req.session.otpGeneratedTime = sessionData.otpGeneratedTime;
+        yield (0, sendVerifyEmail_1.default)(req, req.body.userName, req.body.email);
+        console.log("Register session data:", req.session);
+        res
+            .status(http_status_codes_1.StatusCodes.OK)
+            .json({ message: "OTP sent for verification", email: req.body.email });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            res.status(http_status_codes_1.StatusCodes.CONFLICT).json({ message: error.message });
+        }
+        else {
+            res
+                .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+                .json({ message: "An unexpected error occurred" });
+        }
+    }
+}));
 // method 2 working
 // export const userRegisterController = asyncHandler(async (req: Request, res: Response) => {
 //   const userService = new UserService();
@@ -114,32 +113,34 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 //   }
 // );
 // Register new user
-exports.userRegisterController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log("req body 00", req.body);
-    const { userName, email, password } = req.body;
-    const userEmail = yield userModel_1.default.findOne({ email });
-    if (userEmail) {
-        res.status(http_status_codes_1.StatusCodes.CONFLICT).json({ message: "Email already exist" });
-    }
-    const userId = yield userModel_1.default.findOne({ userName });
-    if (userId) {
-        res.status(http_status_codes_1.StatusCodes.CONFLICT).json({ message: "UserName already exist" });
-    }
-    const otp = speakeasy_1.default.totp({
-        secret: speakeasy_1.default.generateSecret({ length: 20 }).base32,
-        digits: 4,
-    });
-    const sessionData = req.session;
-    sessionData.userDetails = { userName, email, password };
-    sessionData.otp = otp;
-    sessionData.otpGeneratedTime = Date.now();
-    const salt = yield bcrypt_1.default.genSalt(10);
-    const hashedPassword = yield bcrypt_1.default.hash(password, salt);
-    sessionData.userDetails.password = hashedPassword;
-    (0, sendVerifyEmail_1.default)(req, userName, email);
-    console.log("register session0", sessionData);
-    res.status(http_status_codes_1.StatusCodes.OK).json({ message: "OTP sent for verification ", email });
-}));
+// export const userRegisterController = asyncHandler(
+//   async (req:Request, res:Response) => {
+//     // console.log("req body 00", req.body);
+//     const {userName, email, password} = req.body
+//     const userEmail = await User.findOne({email})
+//     if(userEmail) {
+//       res.status(StatusCodes.CONFLICT).json({message: "Email already exist"})
+//     }
+//     const userId = await User.findOne({userName})
+//     if(userId) {
+//       res.status(StatusCodes.CONFLICT).json({message: "UserName already exist"})
+//     }
+//     const otp = speakeasy.totp({
+//       secret: speakeasy.generateSecret({ length: 20 }).base32,
+//       digits: 4,
+//     })
+//     const sessionData = req.session!;
+//     sessionData.userDetails = {userName, email, password}
+//     sessionData.otp = otp;
+//     sessionData.otpGeneratedTime = Date.now()
+//     const salt = await bcrypt.genSalt(10)
+//     const hashedPassword = await bcrypt.hash(password, salt)
+//     sessionData.userDetails!.password = hashedPassword
+//     sendVerifyMail(req, userName, email)
+//     console.log("register session0", sessionData);
+//     res.status(StatusCodes.OK).json({ message: "OTP sent for verification ", email });
+//   }
+// )
 // register otp verification
 exports.verifyOTPController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log("in verify");
@@ -413,6 +414,7 @@ exports.refreshTheToken = (0, express_async_handler_1.default)((req, res) => __a
             .json({ message: "Invalid or expired refresh token" });
     }
 }));
+// flkjdsfkds
 //Logout with removing refresh token from db
 exports.userLogoutController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const refreshToken = req.cookies.refreshToken;

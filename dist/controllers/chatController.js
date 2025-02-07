@@ -19,11 +19,12 @@ const userModel_1 = __importDefault(require("../models/user/userModel"));
 const conversationModel_1 = __importDefault(require("../models/conversations/conversationModel"));
 const MessagesModel_1 = __importDefault(require("../models/messages/MessagesModel"));
 const S3Bucket_1 = require("../utils/cloudStorage/S3Bucket");
+const http_status_codes_1 = require("http-status-codes");
 exports.deleteOneMessage = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.query;
         if (!id) {
-            res.status(400).json({ error: "Message ID is required." });
+            res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ error: "Message ID is required." });
             return;
         }
         const result = yield MessagesModel_1.default.findByIdAndDelete(id);
@@ -31,19 +32,18 @@ exports.deleteOneMessage = (0, express_async_handler_1.default)((req, res) => __
             res.status(404).json({ error: "Message not found." });
             return;
         }
-        res.status(200).json({ message: "Message deleted successfully." });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Message deleted successfully." });
     }
     catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Internal server error." });
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server error." });
     }
 }));
 exports.deleteConversation = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('hyumoooooo');
     try {
         const { id } = req.query;
         if (!id) {
-            res.status(400).json({ error: "Convesation ID is required." });
+            res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ error: "Convesation ID is required." });
             return;
         }
         const result = yield conversationModel_1.default.findByIdAndDelete(id);
@@ -51,11 +51,11 @@ exports.deleteConversation = (0, express_async_handler_1.default)((req, res) => 
             res.status(404).json({ error: "Convesation not found." });
             return;
         }
-        res.status(200).json({ message: "Convesation deleted successfully." });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Convesation deleted successfully." });
     }
     catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Internal server error." });
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server error." });
     }
 }));
 // export const deleteOneMessage = asyncHandler(
@@ -65,12 +65,12 @@ exports.deleteConversation = (0, express_async_handler_1.default)((req, res) => 
 //       const { id } = req.query;
 //       // Ensure `id` is provided and is a valid string
 //       if (!id || typeof id !== 'string') {
-//         res.status(400).json({ error: "Message ID is required." });
+//         res.status(StatusCodes.BAD_REQUEST).json({ error: "Message ID is required." });
 //         return; // Return explicitly after sending the response
 //       }
 //       // Validate the ID format (check if it's a valid MongoDB ObjectId)
 //       if (!Types.ObjectId.isValid(id)) {
-//         res.status(400).json({ error: "Invalid Message ID format." });
+//         res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid Message ID format." });
 //         return;
 //       }
 //       // Attempt to delete the message by ID
@@ -81,11 +81,11 @@ exports.deleteConversation = (0, express_async_handler_1.default)((req, res) => 
 //         return;
 //       }
 //       // Success response
-//       res.status(200).json({ message: "Message deleted successfully." });
+//       res.status(StatusCodes.OK).json({ message: "Message deleted successfully." });
 //     } catch (err) {
 //       // Handle unexpected errors
 //       console.error(err);
-//       res.status(500).json({ error: "Internal server error." });
+//       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server error." });
 //     }
 //   }
 // );
@@ -98,10 +98,10 @@ exports.getEligibleUsersController = (0, express_async_handler_1.default)((req, 
         // $or: [{isPrivate: false}, {_id: {$in: followingUsers}}]
         const users = yield userModel_1.default.find(validUsers);
         // console.log("eligible users", users);
-        res.status(200).json(users);
+        res.status(http_status_codes_1.StatusCodes.OK).json(users);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 exports.addConversationController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -115,7 +115,7 @@ exports.addConversationController = (0, express_async_handler_1.default)((req, r
         select: "userName name profileImg isVerified",
     });
     if (existConversation) {
-        res.status(200).json(existConversation);
+        res.status(http_status_codes_1.StatusCodes.OK).json(existConversation);
         return;
     }
     const newConversation = new conversationModel_1.default({
@@ -128,10 +128,10 @@ exports.addConversationController = (0, express_async_handler_1.default)((req, r
             path: "members",
             select: "userName name profileImg isVerified",
         });
-        res.status(200).json(conversation);
+        res.status(http_status_codes_1.StatusCodes.OK).json(conversation);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 exports.getUserConversationController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -153,10 +153,10 @@ exports.getUserConversationController = (0, express_async_handler_1.default)((re
         })));
         const filteredConversations = conversationWithMessages.filter((conversation) => conversation !== null);
         // console.log("conversations", filteredConversations);
-        res.status(200).json(filteredConversations);
+        res.status(http_status_codes_1.StatusCodes.OK).json(filteredConversations);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 exports.findConversationController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -164,74 +164,12 @@ exports.findConversationController = (0, express_async_handler_1.default)((req, 
         const conversation = yield conversationModel_1.default.findOne({
             members: { $all: [req.params.firstUserId, req.params.secondUserId] },
         });
-        res.status(200).json({ conversation });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ conversation });
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
-// add message
-// export const addMessageController = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     try {
-//       const { conversationId, sender, text, sharedPost } = req.body;
-//       // console.log("all msg details", conversationId, sender, text, sharedPost);
-//       // console.log("sharedPost", sharedPost);
-//       let content = text;
-//       let attachment = null;
-//       let sharedPostData = null;
-//       if (req.file) {
-//         let type: string;
-//         if (req.file.mimetype.startsWith("image/")) {
-//           type = "image";
-//         } else if (req.file.mimetype.startsWith("video/")) {
-//           type = "video";
-//         } else if (req.file.mimetype.startsWith("audio/")) {
-//           type = "audio";
-//         } else {
-//           type = "file";
-//         }
-//         console.log("req.file", req.file);
-//         const fileUrl = await s3Upload(req.file);
-//         console.log("fileurl", fileUrl);
-//         attachment = {
-//           type: type,
-//           url: fileUrl,
-//           filename: fileUrl,
-//           size: req.file.size,
-//         };
-//         content = req.body.messageType;
-//       }
-//       if (sharedPost) {
-//         sharedPostData = sharedPost; // Parse the sharedPost data
-//       }
-//       // console.log("sharedPostData", sharedPostData);
-//       const newMessage = new Message({
-//         conversationId,
-//         sender,
-//         text: content,
-//         attachment,
-//         sharedPost: sharedPostData,
-//       });
-//       // console.log("newMessage", newMessage);
-//       await Conversation.findByIdAndUpdate(
-//         conversationId,
-//         { updatedAt: Date.now() },
-//         { new: true }
-//       );
-//       console.log("conversation updated");
-//       const savedMessages = await newMessage.save();
-//       console.log("savedMessages", savedMessages);
-//       res.status(200).json(savedMessages);
-//     } catch (err) {
-//       res.status(500).json(err);
-//     }
-//   }
-// );
-//send messag 2 
-// interface MulterRequest extends Request {
-//   file?: Express.Multer.File; // Make it optional because not every request has a file
-// }
 // Add message
 exports.addMessageController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -274,10 +212,10 @@ exports.addMessageController = (0, express_async_handler_1.default)((req, res) =
         });
         yield conversationModel_1.default.findByIdAndUpdate(conversationId, { updatedAt: Date.now() }, { new: true });
         const savedMessages = yield newMessage.save();
-        res.status(200).json(savedMessages);
+        res.status(http_status_codes_1.StatusCodes.OK).json(savedMessages);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 // get message
@@ -297,10 +235,10 @@ exports.getMessagesController = (0, express_async_handler_1.default)((req, res) 
             path: 'sender',
             select: "userName name profileImg isVerified",
         });
-        res.status(200).json(messages);
+        res.status(http_status_codes_1.StatusCodes.OK).json(messages);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 // get last message
@@ -321,10 +259,10 @@ exports.getLastMessageController = (0, express_async_handler_1.default)((req, re
             },
         ];
         const lastMessages = yield MessagesModel_1.default.aggregate(pipeline);
-        res.status(200).json(lastMessages);
+        res.status(http_status_codes_1.StatusCodes.OK).json(lastMessages);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 // set message read
@@ -332,10 +270,10 @@ exports.setMessageReadController = (0, express_async_handler_1.default)((req, re
     try {
         const { conversationId, userId } = req.body;
         const messages = yield MessagesModel_1.default.updateMany({ conversationId: conversationId, sender: { $ne: userId } }, { $set: { isRead: true } });
-        res.status(200).json({ messages });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ messages });
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 // get unread messsages
@@ -347,9 +285,9 @@ exports.getUnReadMessageController = (0, express_async_handler_1.default)((req, 
             sender: { $ne: userId },
             isRead: false,
         });
-        res.status(200).json({ messages });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ messages });
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));

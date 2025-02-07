@@ -21,75 +21,16 @@ const connectionModel_1 = __importDefault(require("../models/connections/connect
 const reportModel_1 = __importDefault(require("../models/report/reportModel"));
 const commentModel_1 = __importDefault(require("../models/comment/commentModel"));
 const notificationHelpers_1 = require("../helpers/notificationHelpers");
-// Accept `io` as a parameter
-// export const likePostController = (io: Server) =>
-//   asyncHandler(async (req: Request, res: Response) => {
-//     // console.log('heluzzzzzzz');
-//     const { postId, userId } = req.body;
-//     const post = await Post.findById(postId);
-//     if (!post) {
-//       res.status(404);
-//       throw new Error("Post not found");
-//     }
-//     const isLiked = post.likes.includes(userId);
-//     if (isLiked) {
-//       await Post.findOneAndUpdate(
-//         { _id: postId },
-//         { $pull: { likes: userId } },
-//         { new: true }
-//       );
-//     } else {
-//       console.log("Matching", post.userId, userId);
-//       if (post.userId.toString() !== userId) {
-//         const notificationData = {
-//           senderId: userId,
-//           receiverId: post.userId.toString(), // Ensure this is a string
-//           message: "liked your post",
-//           link: `/profile`,
-//           read: false,
-//           isDeleted: false,
-//           postId: postId,
-//         };
-//         // Create a notification in the database
-//         await createNotification(notificationData);
-//         // Emit a real-time notification via Socket.IO
-//         // const receiverSocketId = (io.of("/notifications") as any).users[notificationData.receiverId];
-//         // if (receiverSocketId) {
-//         //   io.of("/notifications")
-//         //     .to(receiverSocketId)
-//         //     .emit("notification", notificationData);
-//         // }
-//         // console.log('emit like notification:::', notificationData);
-//       }
-//       await Post.findOneAndUpdate(
-//         { _id: postId },
-//         { $push: { likes: userId } },
-//         { new: true }
-//       );
-//     }
-//     const posts = await Post.find({
-//       userId: userId,
-//       isBlocked: false,
-//       isDeleted: false,
-//     })
-//       .populate({
-//         path: "userId",
-//         select: "userName name profileImg isVerified",
-//       })
-//       .sort({ date: -1 });
-//     res.status(200).json({ posts });
-//   });
+const http_status_codes_1 = require("http-status-codes");
 // create new post
 exports.addPostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, imgUrl, title, description, hideLikes, hideComment } = req.body;
-    // console.log("image url",imgUrl);
-    // console.log('req.body from add post :', req.body);
     const post = yield postModel_1.default.create({
         userId, imgUrl: imgUrl, title, description, hideLikes, hideComment
     });
     console.log("addPost details", post);
     if (!post) {
-        res.status(400).json({ message: "Unable to add post" });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "Unable to add post" });
     }
     const posts = yield postModel_1.default.find({ isBlocked: false, isDeleted: false })
         .populate({
@@ -105,11 +46,10 @@ exports.addPostController = (0, express_async_handler_1.default)((req, res) => _
         select: "userName profileImg isVerified",
     })
         .sort({ date: -1 });
-    res.status(200).json({ message: "Post added succussfully", posts });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Post added succussfully", posts });
 }));
 // get user posts
 exports.getUserPostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log("in user post");
     const id = req.params.userId;
     const posts = yield postModel_1.default.find({
         userId: id,
@@ -125,8 +65,7 @@ exports.getUserPostController = (0, express_async_handler_1.default)((req, res) 
         select: "userName name profileImg isVerified",
     })
         .sort({ date: -1 });
-    // console.log("userposts", posts)
-    res.status(200).json(posts);
+    res.status(http_status_codes_1.StatusCodes.OK).json(posts);
 }));
 // get single post
 exports.singlePostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -177,7 +116,7 @@ exports.singlePostController = (0, express_async_handler_1.default)((req, res) =
 //       })
 //       .sort({date: -1})
 //       // console.log(posts);
-//       res.status(200).json(posts)
+//       res.status(StatusCodes.OK).json(posts)
 //   }
 // )
 exports.getPostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -217,10 +156,10 @@ exports.getPostController = (0, express_async_handler_1.default)((req, res) => _
         })
             .sort({ date: -1 });
         // console.log('log post bakend :', posts);
-        res.status(200).json(posts);
+        res.status(http_status_codes_1.StatusCodes.OK).json(posts);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 // save posts
@@ -244,7 +183,7 @@ exports.savePostController = (0, express_async_handler_1.default)((req, res) => 
     }
     const updatedUser = yield userModel_1.default.findById(userId);
     console.log("saved post", user.savedPost);
-    res.status(200).json({
+    res.status(http_status_codes_1.StatusCodes.OK).json({
         message: mssg,
         _id: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.id,
         userName: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.userName,
@@ -276,9 +215,9 @@ exports.savePostController = (0, express_async_handler_1.default)((req, res) => 
 //         "userId"
 //       );
 //       // console.log("saved posts",posts);
-//       res.status(200).json(posts)
+//       res.status(StatusCodes.OK).json(posts)
 //     } else {
-//       res.status(400);
+//       res.status(StatusCodes.BAD_REQUEST);
 //       throw new Error("User not found")
 //     }
 //   }
@@ -300,15 +239,15 @@ exports.getSavedPostController = (0, express_async_handler_1.default)((req, res)
                 match: { isBlocked: false, isDeleted: false }
             });
             const validPosts = posts.filter(post => post.userId !== null);
-            res.status(200).json(validPosts);
+            res.status(http_status_codes_1.StatusCodes.OK).json(validPosts);
         }
         else {
-            res.status(400);
+            res.status(http_status_codes_1.StatusCodes.BAD_REQUEST);
             throw new Error("User not found");
         }
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 exports.deletePostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -332,7 +271,7 @@ exports.deletePostController = (0, express_async_handler_1.default)((req, res) =
         select: "userName name profileImg isVerified",
     })
         .sort({ data: -1 });
-    res.status(200).json({ posts });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ posts });
 }));
 exports.getEditPostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId } = req.body;
@@ -340,14 +279,14 @@ exports.getEditPostController = (0, express_async_handler_1.default)((req, res) 
     if (!post) {
         throw new Error("Post Cannot be found");
     }
-    res.status(200).json(post);
+    res.status(http_status_codes_1.StatusCodes.OK).json(post);
 }));
 exports.updatePostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId, userId, title } = req.body;
     // console.log(postId, userId, title, description);
     const post = yield postModel_1.default.findById(postId);
     if (!post) {
-        res.status(400);
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST);
         throw new Error("Post cannot be found");
     }
     if (title)
@@ -363,7 +302,7 @@ exports.updatePostController = (0, express_async_handler_1.default)((req, res) =
         select: "userName name profileImg isVerified",
     })
         .sort({ date: -1 });
-    res.status(200).json(posts);
+    res.status(http_status_codes_1.StatusCodes.OK).json(posts);
 }));
 exports.reportPostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, postId, reason, reasonType } = req.body;
@@ -371,7 +310,7 @@ exports.reportPostController = (0, express_async_handler_1.default)((req, res) =
     // console.log(userId, postId, reason);
     const existingReport = yield reportModel_1.default.findOne({ userId, postId });
     if (existingReport) {
-        res.status(400).json({ message: "You have already reported this post." });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "You have already reported this post." });
         return;
     }
     const report = new reportModel_1.default({
@@ -385,10 +324,10 @@ exports.reportPostController = (0, express_async_handler_1.default)((req, res) =
     const REPORT_COUNT_LIMIT = 3;
     if (reportCount >= REPORT_COUNT_LIMIT) {
         yield postModel_1.default.findByIdAndUpdate(postId, { isBlocked: true });
-        res.status(200).json({ message: "Post has been blocked due to multiple reports." });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Post has been blocked due to multiple reports." });
         return;
     }
-    res.status(200).json({ message: "Post has been reported successfully." });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Post has been reported successfully." });
 }));
 exports.likePostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId, userId } = req.body;
@@ -428,7 +367,7 @@ exports.likePostController = (0, express_async_handler_1.default)((req, res) => 
     })
         .sort({ date: -1 });
     // console.log("posts while like",posts);
-    res.status(200).json({ posts });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ posts });
 }));
 // get post comments
 // export const getPostCommentsController = asyncHandler(
@@ -449,7 +388,7 @@ exports.likePostController = (0, express_async_handler_1.default)((req, res) => 
 //     })
 //     .sort({createdAt: -1})
 //     // console.log("get comments",comments);
-//     res.status(200).json({comments})
+//     res.status(StatusCodes.OK).json({comments})
 //   }
 // )
 exports.getPostCommentsController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -474,10 +413,10 @@ exports.getPostCommentsController = (0, express_async_handler_1.default)((req, r
         validComments.forEach(comment => {
             comment.replyComments = comment.replyComments.filter(reply => reply.userId !== null);
         });
-        res.status(200).json({ comments: validComments });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ comments: validComments });
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
 // add comment
@@ -513,7 +452,7 @@ exports.addCommentController = (0, express_async_handler_1.default)((req, res) =
         select: "userName name profileImg"
     })
         .sort({ createdAt: -1 });
-    res.status(200).json({ message: "Comment added succussfully", comments });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Comment added succussfully", comments });
 }));
 // delete comment
 exports.deleteCommentController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -538,13 +477,13 @@ exports.deleteCommentController = (0, express_async_handler_1.default)((req, res
         select: "userName name profileImg"
     })
         .sort({ createdAt: -1 });
-    res.status(200).json({ message: "Comment deleted succussfully", comments });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Comment deleted succussfully", comments });
 }));
 // delete Comment reply
 exports.deleteReplyCommentController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { commentId, replyUser, replyTime } = req.body;
     // if (!mongoose.Types.ObjectId.isValid(commentId) || !mongoose.Types.ObjectId.isValid(replyUser)) {
-    //   res.status(400).json({ message: 'Invalid ID format' });
+    //   res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid ID format' });
     //   return
     // }
     const comment = yield commentModel_1.default.findById(commentId);
@@ -573,7 +512,7 @@ exports.deleteReplyCommentController = (0, express_async_handler_1.default)((req
         select: "userName name profileImg"
     })
         .sort({ createdAt: -1 });
-    res.status(200).json({ message: "Comment deleted succussfully", comments });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Comment deleted succussfully", comments });
 }));
 // reply comment
 exports.ReplyCommentController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -604,7 +543,7 @@ exports.ReplyCommentController = (0, express_async_handler_1.default)((req, res)
         select: "userName name profileImg"
     })
         .sort({ createdAt: -1 });
-    res.status(200).json({ message: "Reply Comment added succussfully", comments });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: "Reply Comment added succussfully", comments });
 }));
 // get comment count
 exports.getCommentsCount = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -615,14 +554,14 @@ exports.getCommentsCount = (0, express_async_handler_1.default)((req, res) => __
         isDeleted: false,
     });
     // console.log("count",commentCounts);
-    res.status(200).json({ commentCounts });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ commentCounts });
 }));
 exports.handlePostCommentController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId, userId } = req.body;
     // console.log("manage commetn",postId);
     const post = yield postModel_1.default.findById(postId);
     if (!post) {
-        res.status(400).json({ message: "post not found" });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "post not found" });
         return;
     }
     post.hideComment = !post.hideComment;
@@ -638,14 +577,14 @@ exports.handlePostCommentController = (0, express_async_handler_1.default)((req,
     })
         .sort({ date: -1 });
     const commentState = post.hideComment ? "Comment is hidden" : "Comment is visible";
-    res.status(200).json({ message: `${commentState}`, posts });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: `${commentState}`, posts });
 }));
 exports.handlePostLikeController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId, userId } = req.body;
     // console.log("manage like",postId, userId);
     const post = yield postModel_1.default.findById(postId);
     if (!post) {
-        res.status(400).json({ message: "post not found" });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "post not found" });
         return;
     }
     post.hideLikes = !post.hideLikes;
@@ -661,7 +600,7 @@ exports.handlePostLikeController = (0, express_async_handler_1.default)((req, re
     })
         .sort({ date: -1 });
     const likeState = post.hideLikes ? "Like is hidden" : "Like is visible";
-    res.status(200).json({ message: `${likeState}`, posts });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ message: `${likeState}`, posts });
 }));
 exports.getExplorePostController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -687,9 +626,9 @@ exports.getExplorePostController = (0, express_async_handler_1.default)((req, re
         validPosts.forEach(post => {
             post.likes = post.likes.filter(like => like !== null);
         });
-        res.status(200).json(validPosts);
+        res.status(http_status_codes_1.StatusCodes.OK).json(validPosts);
     }
     catch (err) {
-        res.status(500).json(err);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));

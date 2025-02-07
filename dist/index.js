@@ -18,7 +18,7 @@ const connectionRoutes_1 = __importDefault(require("./routes/connectionRoutes"))
 const errorMiddleware_1 = __importDefault(require("./middlewares/errorMiddleware"));
 const socket_io_1 = require("socket.io");
 const socket_1 = __importDefault(require("./utils/socket/socket")); // Existing socket configuration
-const notificationSocket_1 = __importDefault(require("./utils/socket/notificationSocket")); // New notification socket
+const notificationSocket_1 = require("./utils/socket/notificationSocket"); // New notification socket
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -54,7 +54,7 @@ io.use((socket, next) => {
 // Use a single socket configuration for general socket logic
 (0, socket_1.default)(io);
 // Set up the notification socket configuration
-(0, notificationSocket_1.default)(io);
+(0, notificationSocket_1.notificationSocket)(io);
 app.use("/api/", userRouter_1.default);
 app.use("/api/admin", adminRouter_1.default);
 app.use("/api/post", postRoutes_1.default);

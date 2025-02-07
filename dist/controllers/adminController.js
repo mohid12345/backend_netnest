@@ -19,12 +19,13 @@ const generateAdminToken_1 = __importDefault(require("../utils/generateAdminToke
 const userModel_1 = __importDefault(require("../models/user/userModel"));
 const postModel_1 = __importDefault(require("../models/post/postModel"));
 const reportModel_1 = __importDefault(require("../models/report/reportModel"));
+const http_status_codes_1 = require("http-status-codes");
 exports.LoginController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     const admin = yield adminModel_1.default.findOne({ email });
     // console.log("email & password", email, password);
     if (admin && password == admin.password) {
-        res.status(200).json({
+        res.status(http_status_codes_1.StatusCodes.OK).json({
             message: "Login Successfull",
             _id: admin.id,
             name: admin.name,
@@ -34,16 +35,16 @@ exports.LoginController = (0, express_async_handler_1.default)((req, res) => __a
         });
     }
     else {
-        res.status(400).json({ message: "Invalid Credentials" });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "Invalid Credentials" });
     }
 }));
 exports.getUsersController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const users = yield userModel_1.default.find({}).sort({ date: -1 });
     if (users) {
-        res.status(200).json({ users });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ users });
     }
     else {
-        res.status(400).json({ message: "User not found" });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "User not found" });
     }
 }));
 exports.userBlockController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -51,14 +52,14 @@ exports.userBlockController = (0, express_async_handler_1.default)((req, res) =>
     const user = yield userModel_1.default.findById(userId);
     // console.log(user);
     if (!user) {
-        res.status(400).json({ message: "User not found" });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "User not found" });
         return;
     }
     user.isBlocked = !user.isBlocked;
     yield user.save();
     const users = yield userModel_1.default.find({}).sort({ date: -1 });
     const blockedUser = user.isBlocked ? "Blocked" : "Unblocked";
-    res.status(200).json({ users, message: `${user.userName} has been ${blockedUser}` });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ users, message: `${user.userName} has been ${blockedUser}` });
 }));
 exports.getPostsController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const posts = yield postModel_1.default.find({}).sort({ date: -1 })
@@ -67,10 +68,10 @@ exports.getPostsController = (0, express_async_handler_1.default)((req, res) => 
         select: "userName profileImg",
     });
     if (posts) {
-        res.status(200).json({ posts });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ posts });
     }
     else {
-        res.status(400).json({ message: "Post not found" });
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "Post not found" });
     }
 }));
 exports.getDashboardDetails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -81,21 +82,21 @@ exports.getDashboardDetails = (0, express_async_handler_1.default)((req, res) =>
         totalUsers,
         totalPosts,
     };
-    res.status(200).json(status);
+    res.status(http_status_codes_1.StatusCodes.OK).json(status);
 }));
 exports.postBlockController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId } = req.body;
     console.log("postid", postId);
     const post = yield postModel_1.default.findById(postId);
     if (!post) {
-        res.status(400);
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST);
         throw new Error("Post not found");
     }
     post.isBlocked = !post.isBlocked;
     yield post.save();
     const posts = yield postModel_1.default.find({}).sort({ date: -1 }).lean();
     const blockedPost = post.isBlocked ? "Blocked" : "Unblocked";
-    res.status(200).json({ posts, message: `${post.title} has been ${blockedPost}` });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ posts, message: `${post.title} has been ${blockedPost}` });
 }));
 exports.getPostReports = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const reports = yield reportModel_1.default.find({})
@@ -109,7 +110,7 @@ exports.getPostReports = (0, express_async_handler_1.default)((req, res) => __aw
     console.log(reports);
     if (reports) {
         console.log("reports", reports);
-        res.status(200).json({ reports });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ reports });
     }
     else {
         res.status(404).json({ messsage: "No reports found" });

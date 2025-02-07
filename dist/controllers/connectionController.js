@@ -17,6 +17,7 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const userModel_1 = __importDefault(require("../models/user/userModel"));
 const connectionModel_1 = __importDefault(require("../models/connections/connectionModel"));
 const notificationHelpers_1 = require("../helpers/notificationHelpers");
+const http_status_codes_1 = require("http-status-codes");
 exports.getConnectionController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.body;
     // console.log("userid for getting connection",userId);
@@ -30,7 +31,7 @@ exports.getConnectionController = (0, express_async_handler_1.default)((req, res
         match: { isBlocked: false, isDeleted: false }
     });
     //  console.log("get connectioin", connection);
-    res.status(200).json({ connection });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ connection });
 }));
 exports.followUserController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, followingUser } = req.body;
@@ -38,7 +39,7 @@ exports.followUserController = (0, express_async_handler_1.default)((req, res) =
     const followingUserInfo = yield userModel_1.default.findById(followingUser);
     let followed = false;
     if (!followingUserInfo) {
-        res.status(400);
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST);
         throw new Error("User not found");
     }
     if (followingUserInfo.isPrivate) {
@@ -71,7 +72,7 @@ exports.followUserController = (0, express_async_handler_1.default)((req, res) =
     });
     console.log(followingUserConnections);
     res
-        .status(200)
+        .status(http_status_codes_1.StatusCodes.OK)
         .json({ success: true, message: "User followed successfully", followed });
 }));
 exports.unFollowUserController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -79,7 +80,7 @@ exports.unFollowUserController = (0, express_async_handler_1.default)((req, res)
     // console.log("to unfollow usr", req.body, userId, unfollowingUser);
     yield connectionModel_1.default.findOneAndUpdate({ userId: unfollowingUser }, { $pull: { followers: userId, requestSent: userId } });
     yield connectionModel_1.default.findOneAndUpdate({ userId }, { $pull: { following: unfollowingUser, requested: unfollowingUser } });
-    res.status(200).json({ success: true, message: "User unfollowed successfully" });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ success: true, message: "User unfollowed successfully" });
 }));
 exports.acceptRequestController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, requestedUser } = req.body;
@@ -105,7 +106,7 @@ exports.acceptRequestController = (0, express_async_handler_1.default)((req, res
         select: "userName name profileImg isVerified",
     });
     res
-        .status(200)
+        .status(http_status_codes_1.StatusCodes.OK)
         .json({ success: true, message: "Follow request accepted successfully", connections: connections === null || connections === void 0 ? void 0 : connections.requested });
 }));
 exports.rejectRequestController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -119,7 +120,7 @@ exports.rejectRequestController = (0, express_async_handler_1.default)((req, res
     });
     // console.log("reject request")
     res
-        .status(200)
+        .status(http_status_codes_1.StatusCodes.OK)
         .json({ success: true, message: "Follow request rejected successfully", connections: connections === null || connections === void 0 ? void 0 : connections.requested });
 }));
 exports.getFollowRequestsController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -129,5 +130,5 @@ exports.getFollowRequestsController = (0, express_async_handler_1.default)((req,
         select: "userName name profileImg isVerified",
     });
     // console.log("manage request",requests?.requested);
-    res.status(200).json({ requests: requests === null || requests === void 0 ? void 0 : requests.requested });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ requests: requests === null || requests === void 0 ? void 0 : requests.requested });
 }));
