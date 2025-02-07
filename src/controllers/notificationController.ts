@@ -5,12 +5,6 @@ import Connections from '../models/connections/connectionModel';
 import { StatusCodes } from 'http-status-codes';
 
 
-
-// export const getNotifications = asyncHandler(
-
-// )
-
-
 export const getNotifications = asyncHandler(
   async(req: Request, res: Response):Promise<void> => {
     try {

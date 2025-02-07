@@ -1,6 +1,8 @@
 import { Types } from "mongoose";
 import Notification from "../models/notifications/notificationModel";
 import { NotificationInterface } from "../models/notifications/notificationTypes";
+import { sendNotification } from "../utils/socket/notificationSocket";
+
 
 interface NotificationArgs {
   senderId: Types.ObjectId|undefined|any;
@@ -33,8 +35,11 @@ export const createNotification = async(args: NotificationArgs) : Promise<Notifi
       read,
       isDeleted,
     })
+   
+    
 
     const savedNotification = await newNotification.save()
+    sendNotification(receiverId.toString(), savedNotification);
     return savedNotification
   } catch (error) {
     throw new Error('Error creating notification');

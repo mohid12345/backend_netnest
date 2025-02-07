@@ -7,89 +7,13 @@ import Connections from "../models/connections/connectionModel";
 import Report from "../models/report/reportModel";
 import Comment from "../models/comment/commentModel";
 import { createNotification } from "../helpers/notificationHelpers";
-// import notificationSocket from "../utils/socket/notificationSocket";
-import { Server } from "socket.io";
 import { StatusCodes } from "http-status-codes";
 
 
-// Accept `io` as a parameter
-// export const likePostController = (io: Server) =>
-//   asyncHandler(async (req: Request, res: Response) => {
-//     // console.log('heluzzzzzzz');
-    
-//     const { postId, userId } = req.body;
-
-//     const post = await Post.findById(postId);
-//     if (!post) {
-//       res.status(404);
-//       throw new Error("Post not found");
-//     }
-
-//     const isLiked = post.likes.includes(userId);
-
-//     if (isLiked) {
-//       await Post.findOneAndUpdate(
-//         { _id: postId },
-//         { $pull: { likes: userId } },
-//         { new: true }
-//       );
-//     } else {
-//       console.log("Matching", post.userId, userId);
-//       if (post.userId.toString() !== userId) {
-//         const notificationData = {
-//           senderId: userId,
-//           receiverId: post.userId.toString(), // Ensure this is a string
-//           message: "liked your post",
-//           link: `/profile`,
-//           read: false,
-//           isDeleted: false,
-//           postId: postId,
-//         };
-
-//         // Create a notification in the database
-//         await createNotification(notificationData);
-
-//         // Emit a real-time notification via Socket.IO
-//         // const receiverSocketId = (io.of("/notifications") as any).users[notificationData.receiverId];
-//         // if (receiverSocketId) {
-//         //   io.of("/notifications")
-//         //     .to(receiverSocketId)
-//         //     .emit("notification", notificationData);
-//         // }
-//         // console.log('emit like notification:::', notificationData);
-        
-//       }
-
-//       await Post.findOneAndUpdate(
-//         { _id: postId },
-//         { $push: { likes: userId } },
-//         { new: true }
-//       );
-//     }
-
-//     const posts = await Post.find({
-//       userId: userId,
-//       isBlocked: false,
-//       isDeleted: false,
-//     })
-//       .populate({
-//         path: "userId",
-//         select: "userName name profileImg isVerified",
-//       })
-//       .sort({ date: -1 });
-
-//     res.status(StatusCodes.OK).json({ posts });
-//   });
-
-
 // create new post
-
 export const addPostController = asyncHandler(
   async(req: Request, res: Response) => {
     const {userId, imgUrl, title, description, hideLikes, hideComment} = req.body
-    // console.log("image url",imgUrl);
-    // console.log('req.body from add post :', req.body);
-    
     const post = await Post.create({
       userId, imgUrl: imgUrl, title, description, hideLikes, hideComment
     })
@@ -121,7 +45,6 @@ export const addPostController = asyncHandler(
 
 export const getUserPostController = asyncHandler(
   async(req:Request, res:Response) => {
-    // console.log("in user post");
     const id = req.params.userId
     const posts = await Post.find({
       userId: id,
@@ -137,7 +60,6 @@ export const getUserPostController = asyncHandler(
       select: "userName name profileImg isVerified",
     })
     .sort({date: -1})
-    // console.log("userposts", posts)
     res.status(StatusCodes.OK).json(posts)
   }
 )
