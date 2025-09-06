@@ -25,7 +25,7 @@ import {
     
 } from '../controllers/userController'
 
-import {getNotifications} from '../controllers/notificationController'
+import {getNotifications, clearNotifications} from '../controllers/notificationController'
 
 router.post("/login", userLoginController)
 router.post("/logout", userLogoutController)
@@ -42,6 +42,7 @@ router.post("/user-search", userSearchController)
 router.post("/edit-profile", editProfileController)
 router.post("/change-password", changePasswordController)
 router.post("/get-notifications", getNotifications)
+router.delete("/get-notifications", clearNotifications)
 router.post("/verifyEmail-forEmail", verifyEmailForEmailController)
 router.post("/verifyOTP-forEmail", verifyOTPForEmailController)
 router.patch("/switch-to-private", switchAccountController)

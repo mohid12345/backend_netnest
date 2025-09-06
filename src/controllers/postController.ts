@@ -1,4 +1,4 @@
-import { Request, Response, json } from "express";
+import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import generateToken from "../utils/generateToken";
 import Post from "../models/post/postModel";
@@ -84,102 +84,66 @@ export const singlePostController = asyncHandler(
   }
 )
 
-// get all posts
-
-// export const getPostController = asyncHandler(
-//   async(req:Request, res:Response) => {
-//     const {userId} = req.body
-    
-//     const connections = await Connections.findOne({userId}, {following: 1}) 
-//     const followingUsers = connections?.following
-//     // const validUsers = {$or: [{ isPrivate: false }, { _id: { $in: followingUsers } }]}
-//     const validUsers = {$or: [{ _id: { $in: followingUsers } }]}
-//     const users = await User.find(validUsers)
-//     const userIds = users.map((user) => user._id)
-
-//     interface PostsQuery {
-//       userId: {$in: string[]};
-//       isBlocked: boolean;
-//       isDeleted: boolean;
-//       or?: {[key: string]: any}[];
-//     }
-//     const postsQuery: PostsQuery = {
-//       userId: {$in: [...userIds, userId]},
-//       isBlocked: false,
-//       isDeleted: false,
-//     }
-//     const posts = await Post.find(postsQuery)
-//       .populate({
-//         path: "userId",
-//         select: "userName name profileImg isVerified",
-//       })
-//       .populate({
-//         path: "likes",
-//         select: "userName name profileImg isVerified",
-//       })
-//       .sort({date: -1})
-//       // console.log(posts);
-//       res.status(StatusCodes.OK).json(posts)
-//   }
-// )
-
-
+// send all post via lazyloading
 export const getPostController = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      const { userId } = req.body;
-      console.log('backend userId :', userId);
+      const { userId, page = 1, limit = 3 } = req.body;
+
+      // Ensure page & limit are numbers
+      const pageNum = parseInt(page as string, 10) || 1;
+      const limitNum = parseInt(limit as string, 10) || 3;
 
       // Fetch the user's connections
       const connections = await Connections.findOne({ userId }, { following: 1 });
       const followingUsers = connections?.following || [];
-      // console.log("followingUsers",followingUsers);
-      
-      
+
       // Fetch valid users who are not blocked or deleted
       const validUsers = await User.find({
         _id: { $in: followingUsers },
         isBlocked: false,
-        // isDeleted: false
       });
-      console.log('backend validUser :', validUsers);
-      
 
-      const validUserIds = validUsers.map(user => user._id);
-      // console.log('backend valid user id :', validUserIds);
-      
+      const validUserIds = validUsers.map((user) => user._id);
 
-      
-      
       // Prepare the posts query
       const postsQuery = {
         userId: { $in: [...validUserIds, userId] },
         isBlocked: false,
-        // isDeleted: false
       };
-      
-      // Fetch the posts
+
+      // Count total posts for pagination
+      const totalPosts = await Post.countDocuments(postsQuery);
+
+      // Fetch paginated posts
       const posts = await Post.find(postsQuery)
         .populate({
           path: "userId",
           select: "userName name profileImg isVerified",
-          match: { isBlocked: false }
+          match: { isBlocked: false },
         })
-        .populate({ 
+        .populate({
           path: "likes",
           select: "userName name profileImg isVerified",
-          match: { isBlocked: false }
+          match: { isBlocked: false },
         })
-        .sort({ date: -1 });
-        // console.log('log post bakend :', posts);
-        
-        
-      res.status(StatusCodes.OK).json(posts);
+        .sort({ date: -1 })
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum);
+
+      const hasMore = pageNum * limitNum < totalPosts;
+
+      res.status(StatusCodes.OK).json({
+        posts,
+        hasMore,
+        total: totalPosts,
+      });
     } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
+
 // save posts
 
 export const savePostController = asyncHandler(

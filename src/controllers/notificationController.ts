@@ -22,4 +22,28 @@ export const getNotifications = asyncHandler(
   }
 )
 
+export const clearNotifications = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.query; 
+
+      if (!userId || typeof userId !== "string") {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: "User ID is required" });
+        return;
+      }
+      
+      const result = await Notification.deleteMany({ receiverId: userId });
+
+      res.status(StatusCodes.OK).json({
+        message: "Notifications cleared successfully",
+        deletedCount: result.deletedCount,
+      });
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Error clearing notifications" });
+    }
+  }
+);
+
+
 
