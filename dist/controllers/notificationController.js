@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNotifications = void 0;
+exports.clearNotifications = exports.getNotifications = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const notificationModel_1 = __importDefault(require("../models/notifications/notificationModel"));
 const http_status_codes_1 = require("http-status-codes");
@@ -30,5 +30,23 @@ exports.getNotifications = (0, express_async_handler_1.default)((req, res) => __
     catch (error) {
         console.error('Error fetching notifications:', error);
         res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error fetching notifications' });
+    }
+}));
+exports.clearNotifications = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId } = req.query;
+        if (!userId || typeof userId !== "string") {
+            res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "User ID is required" });
+            return;
+        }
+        const result = yield notificationModel_1.default.deleteMany({ receiverId: userId });
+        res.status(http_status_codes_1.StatusCodes.OK).json({
+            message: "Notifications cleared successfully",
+            deletedCount: result.deletedCount,
+        });
+    }
+    catch (error) {
+        console.error("Error clearing notifications:", error);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Error clearing notifications" });
     }
 }));

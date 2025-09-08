@@ -20,6 +20,7 @@ const conversationModel_1 = __importDefault(require("../models/conversations/con
 const MessagesModel_1 = __importDefault(require("../models/messages/MessagesModel"));
 const S3Bucket_1 = require("../utils/cloudStorage/S3Bucket");
 const http_status_codes_1 = require("http-status-codes");
+const notificationHelpers_1 = require("../helpers/notificationHelpers");
 exports.deleteOneMessage = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.query;
@@ -170,13 +171,15 @@ exports.findConversationController = (0, express_async_handler_1.default)((req, 
         res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
+//Add message with sharePost option
 // Add message
 exports.addMessageController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { conversationId, sender, text, sharedPost } = req.body;
+        const { conversationId, sender, text, sharedPost, messageType } = req.body;
         let content = text;
         let attachment = null;
         let sharedPostData = null;
+        // Handle file upload
         if (req.file) {
             let type;
             if (req.file.mimetype.startsWith("image/")) {
@@ -193,13 +196,14 @@ exports.addMessageController = (0, express_async_handler_1.default)((req, res) =
             }
             const fileUrl = yield (0, S3Bucket_1.s3Upload)(req.file);
             attachment = {
-                type: type,
+                type,
                 url: fileUrl,
                 filename: fileUrl,
                 size: req.file.size,
             };
             content = req.body.messageType;
         }
+        // Handle shared post
         if (sharedPost) {
             sharedPostData = sharedPost;
         }
@@ -211,13 +215,87 @@ exports.addMessageController = (0, express_async_handler_1.default)((req, res) =
             sharedPost: sharedPostData,
         });
         yield conversationModel_1.default.findByIdAndUpdate(conversationId, { updatedAt: Date.now() }, { new: true });
-        const savedMessages = yield newMessage.save();
-        res.status(http_status_codes_1.StatusCodes.OK).json(savedMessages);
+        const savedMessage = yield newMessage.save();
+        // 🔔 Notification when sharing a post
+        if (messageType === "sharePost" && sharedPostData) {
+            // Find the conversation to get the other participant
+            const conversation = yield conversationModel_1.default.findById(conversationId).populate("members", "_id");
+            if (conversation) {
+                const receiverId = conversation.members
+                    .map((m) => m._id.toString())
+                    .find((id) => id !== sender);
+                if (receiverId) {
+                    const notificationData = {
+                        senderId: sender,
+                        receiverId,
+                        message: "shared a post with you",
+                        link: `/post/${sharedPostData._id}`, // link to shared post
+                        read: false,
+                        isDeleted: false,
+                        postId: sharedPostData._id,
+                    };
+                    yield (0, notificationHelpers_1.createNotification)(notificationData);
+                }
+            }
+        }
+        res.status(http_status_codes_1.StatusCodes.OK).json(savedMessage);
     }
     catch (err) {
         res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
 }));
+// Add message
+// export const addMessageController = asyncHandler(
+//   async (req: Request, res: Response) => {
+//     try {
+//       const { conversationId, sender, text, sharedPost } = req.body;
+//       let content = text;
+//       let attachment = null;
+//       let sharedPostData = null;
+//       if (req.file) {
+//         let type: string;
+//         if (req.file.mimetype.startsWith("image/")) {
+//           type = "image";
+//         } else if (req.file.mimetype.startsWith("video/")) {
+//           type = "video";
+//         } else if (req.file.mimetype.startsWith("audio/")) {
+//           type = "audio";
+//         } else {
+//           type = "file";
+//         }
+//         console.log("req.file", req.file);
+//         const fileUrl = await s3Upload(req.file);
+//         console.log("fileurl", fileUrl);
+//         attachment = {
+//           type: type,
+//           url: fileUrl,
+//           filename: fileUrl,
+//           size: req.file.size,
+//         };
+//         content = req.body.messageType;
+//       }
+//       if (sharedPost) {
+//         sharedPostData = sharedPost;
+//       }
+//       const newMessage = new Message({
+//         conversationId,
+//         sender,
+//         text: content,
+//         attachment,
+//         sharedPost: sharedPostData,
+//       });
+//       await Conversation.findByIdAndUpdate(
+//         conversationId,
+//         { updatedAt: Date.now() },
+//         { new: true }
+//       );
+//       const savedMessages = await newMessage.save();
+//       res.status(StatusCodes.OK).json(savedMessages);
+//     } catch (err) {
+//       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
+//     }
+//   }
+// );
 // get message
 exports.getMessagesController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

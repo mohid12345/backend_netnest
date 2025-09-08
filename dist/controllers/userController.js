@@ -148,12 +148,8 @@ exports.verifyOTPController = (0, express_async_handler_1.default)((req, res) =>
     if (req.session) {
         console.log("in session");
     }
-    // console.log("otp verify session here itself ",req.session);
-    console.log("enterd otp", otp);
     const sessionData = req.session;
-    console.log("verify session data_3", sessionData);
     const storedOTP = sessionData.otp;
-    console.log("storedOTP", storedOTP);
     if (!storedOTP || otp !== storedOTP) {
         res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "Invalid OTP" });
         return;
@@ -166,11 +162,9 @@ exports.verifyOTPController = (0, express_async_handler_1.default)((req, res) =>
         res
             .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
             .json({ message: "User details not found in session" });
-        // throw new Error("User details not found in session")
     }
     const userDetails = sessionData.userDetails;
     if (!userDetails) {
-        // res.status(StatusCodes.BAD_REQUEST).json({message: "User details not found in session"});
         throw new Error("User details not found in session");
     }
     const user = yield userModel_1.default.create({
@@ -178,14 +172,12 @@ exports.verifyOTPController = (0, express_async_handler_1.default)((req, res) =>
         email: userDetails.email,
         password: userDetails.password,
     });
-    // console.log("zzzzdat1 :", user);
     yield connectionModel_1.default.create({
         userId: user._id,
     });
     delete sessionData.userDetails;
     delete sessionData.otp;
     delete sessionData.otpGeneratedTime;
-    // console.log("zzzdat2 : ", sessionData);
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ message: "OTP verified, user created", user });
@@ -202,7 +194,6 @@ exports.resendOTPController = (0, express_async_handler_1.default)((req, res) =>
     sessionData.otp = otp;
     sessionData.otpGeneratedTime = Date.now();
     const userDetails = sessionData.userDetails;
-    console.log("sessiondata resendotp", sessionData);
     if (!userDetails) {
         res
             .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
@@ -231,7 +222,6 @@ exports.forgotPasswordController = (0, express_async_handler_1.default)((req, re
             secret: speakeasy_1.default.generateSecret({ length: 20 }).base32,
             digits: 4,
         });
-        // console.log("req session",req.session);
         const sessionData = req.session;
         sessionData.otp = otp;
         sessionData.otpGeneratedTime = Date.now();
@@ -244,19 +234,16 @@ exports.forgotPasswordController = (0, express_async_handler_1.default)((req, re
     }
     else {
         res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "User not found" });
-        // throw new Error("Not User Found");
     }
 }));
 // forgot password otp verification
 exports.forgotOtpController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { otp } = req.body;
-    // console.log("otp verification ", otp);
     if (!otp) {
         res
             .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
             .json({ message: "Please provide OTP" });
         return;
-        // throw new Error("Please provide OTP");
     }
     const sessionData = req.session;
     const storedOTP = sessionData.otp;
@@ -264,7 +251,6 @@ exports.forgotOtpController = (0, express_async_handler_1.default)((req, res) =>
     if (!storedOTP || otp !== storedOTP) {
         res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "Invalid OTP" });
         return;
-        // throw new Error("Invalid OTP")
     }
     const otpGeneratedTime = sessionData.otpGeneratedTime || 0;
     const currentTime = Date.now();
@@ -272,11 +258,9 @@ exports.forgotOtpController = (0, express_async_handler_1.default)((req, res) =>
     if (currentTime - otpGeneratedTime > otpExpirationTime) {
         res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "OTP has expired" });
         return;
-        // throw new Error("OTP has expired");
     }
     delete sessionData.otp;
     delete sessionData.otpGeneratedTime;
-    // console.log("sessiondata in forgotOtpController", sessionData);
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({
@@ -317,7 +301,6 @@ exports.resetPasswordController = (0, express_async_handler_1.default)((req, res
 // Login user
 exports.userLoginController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
-    console.log("email: ", email, "Password: ", password);
     const user = yield userModel_1.default.findOne({ email });
     if (user === null || user === void 0 ? void 0 : user.isBlocked) {
         res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "user is blocked" });
@@ -355,7 +338,6 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
         res
             .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
             .json({ message: "invalid credentails" });
-        // throw new Error("Invalid credentails");
     }
 }));
 exports.refreshTheToken = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -435,8 +417,6 @@ exports.userLogoutController = (0, express_async_handler_1.default)((req, res) =
 // Google authentication
 exports.googleAuthController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userName, email, profileImg } = req.body.userData;
-    console.log("request body", req.body);
-    console.log("user datas ", userName, email, profileImg);
     try {
         const userExist = yield userModel_1.default.findOne({ email });
         if (userExist) {
@@ -594,8 +574,7 @@ exports.getAllUsersController = (0, express_async_handler_1.default)((req, res) 
         const userIds = users.map((user) => user._id);
         const connections = yield connectionModel_1.default.find({ userId: { $in: userIds } });
         const result = users.map((user) => {
-            // const userConnection = connections.find(conn => conn.userId.toString() === user._id.toString());
-            const userConnection = connections.find((conn) => conn.userId.toString()); //issue with inteface
+            const userConnection = connections.find((conn) => conn.userId.toString() === String(user._id));
             return Object.assign(Object.assign({}, user.toObject()), { followersCount: userConnection ? userConnection.followers.length : 0, followingCount: userConnection ? userConnection.following.length : 0 });
         });
         console.log("result", result);
@@ -610,11 +589,8 @@ exports.getAllUsersController = (0, express_async_handler_1.default)((req, res) 
 }));
 exports.getUserDetailsController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
-    // console.log("useridddddd",userId);
     const user = yield userModel_1.default.findById(userId);
-    // console.log('user : ',user);
     const connections = yield connectionModel_1.default.findOne({ userId });
-    // console.log('connections :', connections);
     if (user) {
         res.status(http_status_codes_1.StatusCodes.OK).json({ user, connections });
     }
@@ -625,7 +601,7 @@ exports.getUserDetailsController = (0, express_async_handler_1.default)((req, re
     }
 }));
 exports.userSearchController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { searchQuery } = req.body; //req been destructuring
+    const { searchQuery } = req.body;
     if (!searchQuery || searchQuery.trim() === "") {
         res.status(http_status_codes_1.StatusCodes.OK).json({ suggestedUsers: [] });
         return;
@@ -637,7 +613,6 @@ exports.userSearchController = (0, express_async_handler_1.default)((req, res) =
             isBlocked: false,
             isDeleted: false,
         }).limit(6);
-        // console.log("search users", users);
         res.status(http_status_codes_1.StatusCodes.OK).json({ suggestedUsers: users });
     }
     catch (error) {
@@ -649,7 +624,6 @@ exports.userSearchController = (0, express_async_handler_1.default)((req, res) =
 }));
 exports.changePasswordController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, currentPassword, newPassword } = req.body;
-    // console.log(userId, currentPassword, newPassword);
     const user = yield userModel_1.default.findById(userId);
     if (!user) {
         res
@@ -681,7 +655,6 @@ exports.changePasswordController = (0, express_async_handler_1.default)((req, re
 exports.switchAccountController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("heluu");
     const { userId } = req.body;
-    console.log("user id to switch", userId);
     const user = yield userModel_1.default.findById(userId);
     if (!user) {
         res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: "User not found" });

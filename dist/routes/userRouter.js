@@ -22,6 +22,7 @@ router.post("/user-search", userController_1.userSearchController);
 router.post("/edit-profile", userController_1.editProfileController);
 router.post("/change-password", userController_1.changePasswordController);
 router.post("/get-notifications", notificationController_1.getNotifications);
+router.delete("/get-notifications", notificationController_1.clearNotifications);
 router.post("/verifyEmail-forEmail", userController_1.verifyEmailForEmailController);
 router.post("/verifyOTP-forEmail", userController_1.verifyOTPForEmailController);
 router.patch("/switch-to-private", userController_1.switchAccountController);
