@@ -317,7 +317,7 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
         yield new tokenModel_1.default({ token: refreshToken, userId: user.id }).save(); //save locally @db
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true, //cant be accesssed by js
-            secure: process.env.NODE_ENV === "development", //secure in production (HTTPS)
+            secure: process.env.NODE_ENV === "production", //secure in production (HTTPS)
             sameSite: "strict",
         });
         res.status(http_status_codes_1.StatusCodes.OK).json({

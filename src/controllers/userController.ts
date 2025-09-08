@@ -368,7 +368,7 @@ const user = await User.findOne({ email });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true, //cant be accesssed by js
-        secure: process.env.NODE_ENV === "development", //secure in production (HTTPS)
+        secure: process.env.NODE_ENV === "production", //secure in production (HTTPS)
         sameSite: "strict",
       });
 
