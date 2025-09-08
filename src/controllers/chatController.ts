@@ -5,16 +5,15 @@ import User from "../models/user/userModel";
 import Conversation from "../models/conversations/conversationModel";
 import Message from "../models/messages/MessagesModel";
 import { s3Upload } from "../utils/cloudStorage/S3Bucket";
-import { Schema } from "mongoose";
 import { StatusCodes } from "http-status-codes";
 
 export const deleteOneMessage = asyncHandler(
-  async (req: Request, res: Response) => { 
+  async (req: Request, res: Response) => {
     try {
-        const { id } = req.query;
+      const { id } = req.query;
       if (!id) {
         res.status(StatusCodes.BAD_REQUEST).json({ error: "Message ID is required." });
-        return; 
+        return;
       }
       const result = await Message.findByIdAndDelete(id);
       if (!result) {
@@ -30,13 +29,13 @@ export const deleteOneMessage = asyncHandler(
 );
 
 export const deleteConversation = asyncHandler(
-  async (req: Request, res: Response) => { 
-    
+  async (req: Request, res: Response) => {
+
     try {
-        const { id } = req.query;
+      const { id } = req.query;
       if (!id) {
         res.status(StatusCodes.BAD_REQUEST).json({ error: "Convesation ID is required." });
-        return; 
+        return;
       }
       const result = await Conversation.findByIdAndDelete(id);
       if (!result) {
@@ -90,15 +89,15 @@ export const deleteConversation = asyncHandler(
 
 
 export const getEligibleUsersController = asyncHandler(
-  async(req:Request, res:Response) => {
+  async (req: Request, res: Response) => {
     try {
-      const {userId} = req.body
+      const { userId } = req.body
       const connections = await Connections.findOne(
-        {userId},
-        {following: 1}
+        { userId },
+        { following: 1 }
       )
       const followingUsers = connections?.following
-      const validUsers = {$or: [{ _id: { $in: followingUsers } }]}
+      const validUsers = { $or: [{ _id: { $in: followingUsers } }] }
       // $or: [{isPrivate: false}, {_id: {$in: followingUsers}}]
       const users = await User.find(validUsers)
       // console.log("eligible users", users);
@@ -110,17 +109,17 @@ export const getEligibleUsersController = asyncHandler(
 )
 
 export const addConversationController = asyncHandler(
-  async(req:Request, res:Response) => {
+  async (req: Request, res: Response) => {
     const { senderId, receiverId } = req.body
     // console.log("msg ids",senderId, receiverId);  
     const existConversation = await Conversation.findOne({
       members: { $all: [senderId, receiverId] },
     })
-    .populate({
-      path: "members",
-      select: "userName name profileImg isVerified",
-    })
-    if(existConversation) {
+      .populate({
+        path: "members",
+        select: "userName name profileImg isVerified",
+      })
+    if (existConversation) {
       res.status(StatusCodes.OK).json(existConversation)
       return
     }
@@ -130,34 +129,34 @@ export const addConversationController = asyncHandler(
     try {
       const savedConversation = await newConversation.save()
       const conversation = await Conversation.findById(savedConversation._id)
-      .populate({
-        path: "members",
-        select: "userName name profileImg isVerified", 
-      })
+        .populate({
+          path: "members",
+          select: "userName name profileImg isVerified",
+        })
       res.status(StatusCodes.OK).json(conversation)
-    } catch (err) { 
+    } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 )
 
 export const getUserConversationController = asyncHandler(
-  async(req:Request, res:Response) => {
+  async (req: Request, res: Response) => {
     try {
       const userId = req.params.userId
       const conversations = await Conversation.find({
-        members: {$in: [userId]},
+        members: { $in: [userId] },
       })
-      .populate({
-        path: "members",
-        select: "userName name profileImg isVerified", 
-      })
-      .sort({updatedAt: -1})
-      
+        .populate({
+          path: "members",
+          select: "userName name profileImg isVerified",
+        })
+        .sort({ updatedAt: -1 })
+
       const conversationWithMessages = await Promise.all(
         conversations.map(async (conversation) => {
           const messageCount = await Message.countDocuments({
-              conversationId: conversation._id
+            conversationId: conversation._id
           })
           return messageCount > 0 ? conversation : null
         })
@@ -174,16 +173,16 @@ export const getUserConversationController = asyncHandler(
 )
 
 export const findConversationController = asyncHandler(
-  async(req:Request, res:Response) => {
+  async (req: Request, res: Response) => {
     try {
       const conversation = await Conversation.findOne({
-        members: {$all: [req.params.firstUserId, req.params.secondUserId]},
+        members: { $all: [req.params.firstUserId, req.params.secondUserId] },
       })
-      res.status(StatusCodes.OK).json({conversation})
+      res.status(StatusCodes.OK).json({ conversation })
     } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
-  } 
+  }
 )
 
 
@@ -207,8 +206,10 @@ export const addMessageController = asyncHandler(
         } else {
           type = "file";
         }
-
+        console.log("req.file", req.file);
         const fileUrl = await s3Upload(req.file);
+        console.log("fileurl", fileUrl);
+
         attachment = {
           type: type,
           url: fileUrl,
@@ -252,18 +253,18 @@ export const getMessagesController = asyncHandler(
       const messages = await Message.find({
         conversationId: req.params.conversationId,
       })
-      .populate({
-        path: 'sharedPost',
-        populate: {
-          path: 'userId',
-          select: 'userName name profileImg isVerified'
-        }
-      })
-      .populate({
-        path: 'sender',
-        select: "userName name profileImg isVerified",
-      });
-      
+        .populate({
+          path: 'sharedPost',
+          populate: {
+            path: 'userId',
+            select: 'userName name profileImg isVerified'
+          }
+        })
+        .populate({
+          path: 'sender',
+          select: "userName name profileImg isVerified",
+        });
+
       res.status(StatusCodes.OK).json(messages);
     } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
@@ -280,7 +281,7 @@ export const getLastMessageController = asyncHandler(
     try {
       const pipeline: any[] = [
         {
-          $sort: { createdAt: -1 }, 
+          $sort: { createdAt: -1 },
         },
         {
           $group: {
@@ -303,14 +304,14 @@ export const getLastMessageController = asyncHandler(
 
 // set message read
 export const setMessageReadController = asyncHandler(
-  async(req:Request, res:Response) => {
+  async (req: Request, res: Response) => {
     try {
       const { conversationId, userId } = req.body
       const messages = await Message.updateMany(
         { conversationId: conversationId, sender: { $ne: userId } },
-        { $set: { isRead: true }}
+        { $set: { isRead: true } }
       )
-      res.status(StatusCodes.OK).json({messages})
+      res.status(StatusCodes.OK).json({ messages })
     } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
@@ -319,15 +320,15 @@ export const setMessageReadController = asyncHandler(
 
 // get unread messsages
 export const getUnReadMessageController = asyncHandler(
-  async(req:Request, res:Response) => {
-    try { 
+  async (req: Request, res: Response) => {
+    try {
       const { conversationId, userId } = req.body
       const messages = await Message.find({
         conversationId: conversationId,
         sender: { $ne: userId },
         isRead: false,
       })
-      res.status(StatusCodes.OK).json({messages})
+      res.status(StatusCodes.OK).json({ messages })
     } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
