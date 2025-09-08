@@ -6,6 +6,7 @@ import Conversation from "../models/conversations/conversationModel";
 import Message from "../models/messages/MessagesModel";
 import { s3Upload } from "../utils/cloudStorage/S3Bucket";
 import { StatusCodes } from "http-status-codes";
+import { createNotification } from "../helpers/notificationHelpers";
 
 export const deleteOneMessage = asyncHandler(
   async (req: Request, res: Response) => {
@@ -185,16 +186,17 @@ export const findConversationController = asyncHandler(
   }
 )
 
-
+//Add message with sharePost option
 // Add message
 export const addMessageController = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      const { conversationId, sender, text, sharedPost } = req.body;
+      const { conversationId, sender, text, sharedPost, messageType } = req.body;
       let content = text;
       let attachment = null;
       let sharedPostData = null;
 
+      // Handle file upload
       if (req.file) {
         let type: string;
         if (req.file.mimetype.startsWith("image/")) {
@@ -206,12 +208,11 @@ export const addMessageController = asyncHandler(
         } else {
           type = "file";
         }
-        console.log("req.file", req.file);
+
         const fileUrl = await s3Upload(req.file);
-        console.log("fileurl", fileUrl);
 
         attachment = {
-          type: type,
+          type,
           url: fileUrl,
           filename: fileUrl,
           size: req.file.size,
@@ -219,6 +220,7 @@ export const addMessageController = asyncHandler(
         content = req.body.messageType;
       }
 
+      // Handle shared post
       if (sharedPost) {
         sharedPostData = sharedPost;
       }
@@ -237,13 +239,103 @@ export const addMessageController = asyncHandler(
         { new: true }
       );
 
-      const savedMessages = await newMessage.save();
-      res.status(StatusCodes.OK).json(savedMessages);
+      const savedMessage = await newMessage.save();
+
+      // 🔔 Notification when sharing a post
+      if (messageType === "sharePost" && sharedPostData) {
+        // Find the conversation to get the other participant
+        const conversation = await Conversation.findById(conversationId).populate(
+          "members",
+          "_id"
+        );
+
+        if (conversation) {
+          const receiverId = conversation.members
+            .map((m: any) => m._id.toString())
+            .find((id: string) => id !== sender);
+
+          if (receiverId) {
+            const notificationData = {
+              senderId: sender,
+              receiverId,
+              message: "shared a post with you",
+              link: `/post/${sharedPostData._id}`, // link to shared post
+              read: false,
+              isDeleted: false,
+              postId: sharedPostData._id,
+            };
+
+            await createNotification(notificationData);
+          }
+        }
+      }
+
+      res.status(StatusCodes.OK).json(savedMessage);
     } catch (err) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
     }
   }
 );
+
+
+// Add message
+// export const addMessageController = asyncHandler(
+//   async (req: Request, res: Response) => {
+//     try {
+//       const { conversationId, sender, text, sharedPost } = req.body;
+//       let content = text;
+//       let attachment = null;
+//       let sharedPostData = null;
+
+//       if (req.file) {
+//         let type: string;
+//         if (req.file.mimetype.startsWith("image/")) {
+//           type = "image";
+//         } else if (req.file.mimetype.startsWith("video/")) {
+//           type = "video";
+//         } else if (req.file.mimetype.startsWith("audio/")) {
+//           type = "audio";
+//         } else {
+//           type = "file";
+//         }
+//         console.log("req.file", req.file);
+//         const fileUrl = await s3Upload(req.file);
+//         console.log("fileurl", fileUrl);
+
+//         attachment = {
+//           type: type,
+//           url: fileUrl,
+//           filename: fileUrl,
+//           size: req.file.size,
+//         };
+//         content = req.body.messageType;
+//       }
+
+//       if (sharedPost) {
+//         sharedPostData = sharedPost;
+//       }
+
+//       const newMessage = new Message({
+//         conversationId,
+//         sender,
+//         text: content,
+//         attachment,
+//         sharedPost: sharedPostData,
+//       });
+
+//       await Conversation.findByIdAndUpdate(
+//         conversationId,
+//         { updatedAt: Date.now() },
+//         { new: true }
+//       );
+
+//       const savedMessages = await newMessage.save();
+//       res.status(StatusCodes.OK).json(savedMessages);
+//     } catch (err) {
+//       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
+//     }
+//   }
+// );
 
 
 // get message

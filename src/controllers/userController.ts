@@ -165,14 +165,8 @@ export const verifyOTPController = asyncHandler(
     if (req.session) {
       console.log("in session");
     }
-    // console.log("otp verify session here itself ",req.session);
-    console.log("enterd otp", otp);
-
     const sessionData = req.session!;
-    console.log("verify session data_3", sessionData);
-
     const storedOTP = sessionData.otp;
-    console.log("storedOTP", storedOTP);
 
     if (!storedOTP || otp !== storedOTP) {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid OTP" });
@@ -186,11 +180,9 @@ export const verifyOTPController = asyncHandler(
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: "User details not found in session" });
-      // throw new Error("User details not found in session")
     }
     const userDetails = sessionData.userDetails;
     if (!userDetails) {
-      // res.status(StatusCodes.BAD_REQUEST).json({message: "User details not found in session"});
       throw new Error("User details not found in session");
     }
     const user = await User.create({
@@ -198,7 +190,6 @@ export const verifyOTPController = asyncHandler(
       email: userDetails.email,
       password: userDetails.password,
     });
-    // console.log("zzzzdat1 :", user);
 
     await Connections.create({
       userId: user._id,
@@ -206,7 +197,6 @@ export const verifyOTPController = asyncHandler(
     delete sessionData.userDetails;
     delete sessionData.otp;
     delete sessionData.otpGeneratedTime;
-    // console.log("zzzdat2 : ", sessionData);
 
     res
       .status(StatusCodes.OK)
@@ -229,7 +219,6 @@ export const resendOTPController = asyncHandler(
     sessionData.otp = otp;
     sessionData.otpGeneratedTime = Date.now();
     const userDetails = sessionData.userDetails;
-    console.log("sessiondata resendotp", sessionData);
     if (!userDetails) {
       res
         .status(StatusCodes.BAD_REQUEST)
@@ -264,7 +253,6 @@ export const forgotPasswordController = asyncHandler(
         secret: speakeasy.generateSecret({ length: 20 }).base32,
         digits: 4,
       });
-      // console.log("req session",req.session);
       const sessionData = req.session!;
       sessionData.otp = otp;
       sessionData.otpGeneratedTime = Date.now();
@@ -276,7 +264,6 @@ export const forgotPasswordController = asyncHandler(
         .json({ message: `OTP has been send to your email`, email });
     } else {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "User not found" });
-      // throw new Error("Not User Found");
     }
   }
 );
@@ -286,13 +273,11 @@ export const forgotPasswordController = asyncHandler(
 export const forgotOtpController = asyncHandler(
   async (req: Request, res: Response) => {
     const { otp } = req.body;
-    // console.log("otp verification ", otp);
     if (!otp) {
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: "Please provide OTP" });
       return;
-      // throw new Error("Please provide OTP");
     }
     const sessionData = req.session!;
     const storedOTP = sessionData.otp;
@@ -300,7 +285,6 @@ export const forgotOtpController = asyncHandler(
     if (!storedOTP || otp !== storedOTP) {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid OTP" });
       return;
-      // throw new Error("Invalid OTP")
     }
     const otpGeneratedTime = sessionData.otpGeneratedTime || 0;
     const currentTime = Date.now();
@@ -308,12 +292,10 @@ export const forgotOtpController = asyncHandler(
     if (currentTime - otpGeneratedTime > otpExpirationTime) {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "OTP has expired" });
       return;
-      // throw new Error("OTP has expired");
     }
 
     delete sessionData.otp;
     delete sessionData.otpGeneratedTime;
-    // console.log("sessiondata in forgotOtpController", sessionData);
     res
       .status(StatusCodes.OK)
       .json({
@@ -365,9 +347,7 @@ export const resetPasswordController = asyncHandler(
 export const userLoginController = asyncHandler(
   async (req: Request, res: Response) => {
     const { email, password } = req.body;
-    console.log("email: ", email, "Password: ", password);
-
-    const user = await User.findOne({ email });
+const user = await User.findOne({ email });
     if (user?.isBlocked) {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "user is blocked" });
       return;
@@ -409,7 +389,6 @@ export const userLoginController = asyncHandler(
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: "invalid credentails" });
-      // throw new Error("Invalid credentails");
     }
   }
 );
@@ -510,8 +489,6 @@ export const userLogoutController = asyncHandler(
 export const googleAuthController = asyncHandler(
   async (req: Request, res: Response) => {
     const { userName, email, profileImg } = req.body.userData;
-    console.log("request body", req.body);
-    console.log("user datas ", userName, email, profileImg);
     try {
       const userExist = await User.findOne({ email });
 
@@ -688,10 +665,9 @@ export const getAllUsersController = asyncHandler(
       const connections = await Connections.find({ userId: { $in: userIds } });
 
       const result = users.map((user) => {
-        // const userConnection = connections.find(conn => conn.userId.toString() === user._id.toString());
-        const userConnection = connections.find((conn) =>
-          conn.userId.toString()
-        ); //issue with inteface
+        const userConnection = connections.find(
+          (conn) => conn.userId.toString() === String(user._id)
+        );
 
         return {
           ...user.toObject(),
@@ -713,11 +689,8 @@ export const getAllUsersController = asyncHandler(
 export const getUserDetailsController = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    // console.log("useridddddd",userId);
     const user = await User.findById(userId);
-    // console.log('user : ',user);
     const connections = await Connections.findOne({ userId });
-    // console.log('connections :', connections);
     if (user) {
       res.status(StatusCodes.OK).json({ user, connections });
     } else {
@@ -730,7 +703,7 @@ export const getUserDetailsController = asyncHandler(
 
 export const userSearchController = asyncHandler(
   async (req: Request, res: Response) => {
-    const { searchQuery } = req.body; //req been destructuring
+    const { searchQuery } = req.body; 
     if (!searchQuery || searchQuery.trim() === "") {
       res.status(StatusCodes.OK).json({ suggestedUsers: [] });
       return;
@@ -742,7 +715,6 @@ export const userSearchController = asyncHandler(
         isBlocked: false,
         isDeleted: false,
       }).limit(6);
-      // console.log("search users", users);
       res.status(StatusCodes.OK).json({ suggestedUsers: users });
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -756,7 +728,6 @@ export const userSearchController = asyncHandler(
 export const changePasswordController = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, currentPassword, newPassword } = req.body;
-    // console.log(userId, currentPassword, newPassword);
     const user = await User.findById(userId);
     if (!user) {
       res
@@ -793,7 +764,6 @@ export const switchAccountController = asyncHandler(
     console.log("heluu");
 
     const { userId } = req.body;
-    console.log("user id to switch", userId);
     const user = await User.findById(userId);
     if (!user) {
       res.status(StatusCodes.BAD_REQUEST).json({ message: "User not found" });
